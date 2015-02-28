@@ -201,7 +201,7 @@ sched_switch(void)
      /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
 	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/
 	int	old_ipl;
-	kthread_t old_thread;
+	kthread_t *old_thread;
 	old_ipl = intr_getipl(); /*get and save current interrupt level*/
 	intr_setipl(IPL_HIGH);
 
@@ -212,7 +212,7 @@ sched_switch(void)
 		intr_setipl(IPL_HIGH);
 	};
 	/*save current thread to the old_thread: */
-	&old_thread = curthr;
+	old_thread = curthr;
 	/* dequeue a thread from run queue:*/
 	curthr = ktqueue_dequeue(&kt_runq);
 	curthr->kt_state = KT_RUN;
