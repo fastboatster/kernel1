@@ -100,24 +100,25 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
 	kthread_t *new_thr = (kthread_t*)slab_obj_alloc(kthread_allocator);
 	KASSERT(new_thr);
-	//allocate the new stack:
-	new_thr->kt_kstack = stack_alloc();
+	/* allocate the new stack: */
+	new_thr->kt_kstack = alloc_stack();
 	KASSERT(new_thr->kt_kstack);
-	//set other data fields:
-	new_thr->kt_proc = p; //set the parent process to the process passed to the function
+	/* set other data fields */
+	new_thr->kt_proc = p; /* set the parent process to the process passed to the function */
 	new_thr->kt_retval = NULL;
 	new_thr->kt_errno = NULL;
 	new_thr->kt_cancelled = 0;
-	new_thr->kt_state  = KT_RUN; // make it runnable
-	//setup context, very gross looking::
+	new_thr->kt_state  = KT_RUN; /* make it runnable */
+	/* setup context, very gross looking */
 	context_setup(&(new_thr->kt_ctx), func, arg1, arg2, new_thr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
-	//insert the thread into the list of all the threads in the process p:
-	list_link_init(&(new_thr->kt_plink)); // init the link in the new_thr
-	list_insert_tail(&(p->p_children), &(new_thr->kt_plink)); // into the p_children list in process p
+	/* insert the thread into the list of all the threads in the process p:*/
+	list_link_init(&(new_thr->kt_plink)); /* init the link in the new_thr */
+	list_insert_tail(&(p->p_threads), &(new_thr->kt_plink)); /* into the p_children list in process p */
 
-	//NOT_YET_IMPLEMENTED("PROCS: kthread_create");
+	/*NOT_YET_IMPLEMENTED("PROCS: kthread_create");
+    return NULL;
+    */
 	return new_thr;
-    //return NULL;
 }
 
 /*
