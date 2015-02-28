@@ -268,8 +268,16 @@ idleproc_run(int arg1, void *arg2)
 static kthread_t *
 initproc_create(void)
 {
-        NOT_YET_IMPLEMENTED("PROCS: initproc_create");
-        return NULL;
+
+	        proc_t *init_proc=proc_create("Init");
+	        KASSERT(init_proc!=NULL);		/*Asserting that init_proc is not null*/
+	        KASSERT(init_proc->p_pid == PID_INIT); /* init_proc should have pid 1*/
+
+
+	        kthread_t *init_thr=kthread_create(curproc,initproc_run,NULL,NULL);
+	        KASSERT(init_thr!=NULL);
+
+	        return init_thr;
 }
 
 /**
