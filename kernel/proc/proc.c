@@ -113,8 +113,46 @@ failed:
 proc_t *
 proc_create(char *name)
 {
+	/*
         NOT_YET_IMPLEMENTED("PROCS: proc_create");
         return NULL;
+	*/
+
+	int pid = _proc_getid();
+	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); 	/* pid can only be PID_IDLE if this is the first process */
+	KASSERT(PID_INIT != pid || PID_IDLE == curproc->p_pid); /* pid can only be PID_INIT when creating from idle process */
+
+	proc_t* new_proc = slab_obj_alloc(proc_allocator);
+	new_proc->p_pid = pid;
+
+	strncpy(new_proc->p_comm, name, PROC_NAME_LEN);
+
+	list_init(&(new_proc->p_threads)); 						/* initialize list  to track list of threads */
+	list_init(&(new_proc->p_children)); 					/* initialize list to track list of children */
+
+	new_proc->p_pproc = (PID_IDLE == pid) ? NULL : curproc;	/* parent process is the current process that's running */
+	new_proc->p_status = NULL;
+	new_proc->p_state = PROC_RUNNING;
+	sched_queue_init(&(new_proc->p_wait)); 					/* initialize wait queue */
+	new_proc->p_pagedir = pt_create_pagedir(); 				/* create page directory for the process */
+	KASSERT(NULL!=new_proc->p_pagedir);
+
+	list_insert_tail(&_proc_list, &(new_proc->p_list_link));
+	list_insert_tail(&(curproc->p_children), &(new_proc->p_child_link));
+
+	/* VFS-related: */
+	int index = 0;
+	for(index = 0; index<NFILES; index++){
+		new_proc->p_files[index] = NULL;
+	}
+	new_proc->p_cwd = NULL;			 /* current working directory */
+
+	/* VM */
+	new_proc->p_brk = NULL;			 /* process break; see brk(2) */
+	new_proc->p_start_brk = NULL;    /* initial value of process break */
+	new_proc->p_vmmap = NULL;        /* list of areas mapped into */
+
+	return new_proc;
 }
 
 /**
