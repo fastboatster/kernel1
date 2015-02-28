@@ -113,7 +113,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	context_setup(&(new_thr->kt_ctx), func, arg1, arg2, new_thr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
 	//insert the thread into the list of all the threads in the process p:
 	list_link_init(&(new_thr->kt_plink)); // init the link in the new_thr
-	list_insert_tail(&(p->p_children), &(new_thr->kt_plink)); // into the p_children list in process p
+	list_insert_tail(&(p->p_thread), &(new_thr->kt_plink)); // into the p_children list in process p
 
 	//NOT_YET_IMPLEMENTED("PROCS: kthread_create");
 	return new_thr;
