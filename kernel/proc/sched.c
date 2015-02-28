@@ -198,7 +198,32 @@ sched_cancel(struct kthread *kthr)
 void
 sched_switch(void)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_switch");
+     /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
+	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/
+	int	old_ipl;
+	kthread_t old_thread;
+	old_ipl = intr_getipl(); /*get and save current interrupt level*/
+	intr_setipl(IPL_HIGH);
+
+	while(sched_queue_empty(&kt_runq)) {
+
+		intr_setipl(IPL_LOW);
+		intr_wait();
+		intr_setipl(IPL_HIGH);
+	};
+	/*save current thread to the old_thread: */
+	&old_thread = curthr;
+	/* dequeue a thread from run queue:*/
+	curthr = ktqueue_dequeue(&kt_runq);
+	curthr->kt_state = KT_RUN;
+	/*set current process to be current thread's process:*/
+	curproc = curthr->kt_proc;
+	/*switch contexts:*/
+	context_switch(&(old_thread->kt_ctx), &(curthr->kt_ctx));
+	/*make current thread context active: */
+	context_make_active(&(curthr->kt_ctx));
+	/*re-enable interrupts again:*/
+	intr_setipl(old_ipl); /*not sure about this as it might not be defined in the new threads context*/
 }
 
 /*
@@ -217,5 +242,17 @@ sched_switch(void)
 void
 sched_make_runnable(kthread_t *thr)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");
+    /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
+
+	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/
+
+	int	old_ipl;
+	old_ipl = intr_getipl(); /*get and save current interrupt level*/
+	intr_setipl(IPL_HIGH);
+	/* set the thread state to runnable:*/
+	thr->kt_state = KT_RUN;
+	/* enqueue the thread to the kt_runq (runnable queue):*/
+	ktqueue_enqueue(&kt_runq, thr);
+	/*set the IPL to old:*/
+	intr_setipl(old_ipl);
 }
