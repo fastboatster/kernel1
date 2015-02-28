@@ -113,7 +113,9 @@ sched_queue_empty(ktqueue_t *q)
 void
 sched_sleep_on(ktqueue_t *q)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");
+     /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
+	curthr->kt_state = KT_SLEEP;
+	ktqueue_enqueue(q, curthr);
 }
 
 
@@ -127,21 +129,51 @@ sched_sleep_on(ktqueue_t *q)
 int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");
+    /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on"); */
+	int is_canc = curthr->kt_cancelled;
+	if(is_canc) {
+		return -EINTR;
+	};
+	/* set the state of the thread*/
+	curthr->kt_state = KT_SLEEP_CANCELLABLE;
+	/* enqueue it to the given queue */
+	ktqueue_enqueue(q, curthr);
         return 0;
 }
 
-kthread_t *
-sched_wakeup_on(ktqueue_t *q)
+kthread_t* sched_wakeup_on(ktqueue_t *q)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");
+    /* NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
+	kthread_t* newthr;
+	if(sched_queue_empty(q)) {
         return NULL;
+	};
+	/*else dequeue a thread from waiting queue*/
+	newthr = ktqueue_dequeue(q);
+	newthr->kt_state = KT_RUN;
+	/* remove thread from wait queue*/
+	ktqueue_remove(q, newthr);
+	/*make that thread runnable, i.e. add it to the run queue*/
+	sched_make_runnable(newthr);
+	return newthr;
 }
 
-void
-sched_broadcast_on(ktqueue_t *q)
+void sched_broadcast_on(ktqueue_t *q)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on");
+       /* NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on"); */
+	kthread_t* newthr;
+	if(sched_queue_empty(q)) {
+	        return;
+	};
+	while(!sched_queue_empty(q)) {
+		newthr = ktqueue_dequeue(q);
+		newthr->kt_state = KT_RUN;
+		/* remove thread from wait queue*/
+		ktqueue_remove(q, newthr);
+		/* add that thread to run queue*/
+		sched_make_runnable(newthr);
+	};
+	return;
 }
 
 /*
@@ -153,10 +185,18 @@ sched_broadcast_on(ktqueue_t *q)
  * state, it should be on some queue. Otherwise, it will never be run
  * again.
  */
-void
-sched_cancel(struct kthread *kthr)
+void sched_cancel(struct kthread *kthr)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_cancel");
+     /* NOT_YET_IMPLEMENTED("PROCS: sched_cancel"); */
+	/*get the queue that thread is sleeping on:*/
+	ktqueue_t *wait_q = kthr->kt_wchan;
+	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
+		kthr->kt_cancelled = 1;
+		ktqueue_remove(wait_q, kthr);
+	}
+	else {
+		kthr->kt_cancelled = 1;
+	}
 }
 
 /*
@@ -195,8 +235,7 @@ sched_cancel(struct kthread *kthr)
  *
  * Note: The IPL is process specific.
  */
-void
-sched_switch(void)
+void sched_switch(void)
 {
      /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
 	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/
