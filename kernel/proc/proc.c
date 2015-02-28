@@ -182,6 +182,18 @@ proc_create(char *name)
 void
 proc_cleanup(int status)
 {
+	/*
+	 * for(int i =0 ; i<NFILES; i++)
+	 * 		close(i)
+	 * 	sched_wakeup_on(curproc->p_pproc->p_wait);
+	 * 	KASSERT(INIT_PID != curproc->p_pid);
+	 * 	loop over all children process to reparent to INIT process
+	 * 		curproc->child->(p_pproc->p_id) = INIT_PID
+	 * 	curporc->state = PROC_DEAD
+	 * 	curproc->status =status
+	 * 	set the process to PROC_DEAD (Zombie process)
+	 * 	remove this process from global _proc_list
+	 */
         NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");
 }
 
@@ -196,6 +208,18 @@ proc_cleanup(int status)
 void
 proc_kill(proc_t *p, int status)
 {
+	/*
+	 * Cancel all threads, join with them, and exit from the current thread.
+	 * for(int i =0 ; i<NFILES; i++)
+	 * 		close(i);
+	 * for all threads (p->pthreads)
+	 * 		kthread_cancel(thr, 0); // gets to cancel kthread_exit after getting CPU
+	 * 		sched_make_runnable(kt_runqueue, thr);
+	 * sched_wakeup_on(p->parent->p_wait);
+	 * p->state = PROC_DEAD
+	 * p->status = status
+	 *
+	 */
         NOT_YET_IMPLEMENTED("PROCS: proc_kill");
 }
 
@@ -222,6 +246,12 @@ proc_kill_all()
 void
 proc_thread_exited(void *retval)
 {
+	/*
+	 * remove the current thread from current process
+	 * if(isEmpty(curthr->p_threads)) {
+	 * 		proc_cleanup(curproc->status)
+	 * 	}
+	 */
         NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");
 }
 
@@ -256,6 +286,9 @@ do_waitpid(pid_t pid, int options, int *status)
 void
 do_exit(int status)
 {
+	/*
+	 * proc_kill(curproc, status);
+	 */
         NOT_YET_IMPLEMENTED("PROCS: do_exit");
 }
 
