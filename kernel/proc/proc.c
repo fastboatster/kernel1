@@ -122,14 +122,16 @@ proc_create(char *name)
 	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); 	/* pid can only be PID_IDLE if this is the first process */
 	KASSERT(PID_INIT != pid || PID_IDLE == curproc->p_pid); /* pid can only be PID_INIT when creating from idle process */
 
+	/* create new process */
 	proc_t* new_proc = slab_obj_alloc(proc_allocator);
+	KASSERT(NULL != new_proc);
+
+	/* set process attributes */
 	new_proc->p_pid = pid;
-
 	strncpy(new_proc->p_comm, name, PROC_NAME_LEN);
-
+	new_proc->p_comm[PROC_NAME_LEN-1] = '\0';
 	list_init(&(new_proc->p_threads)); 						/* initialize list  to track list of threads */
 	list_init(&(new_proc->p_children)); 					/* initialize list to track list of children */
-
 	new_proc->p_pproc = (PID_IDLE == pid) ? NULL : curproc;	/* parent process is the current process that's running */
 	new_proc->p_status = NULL;
 	new_proc->p_state = PROC_RUNNING;
@@ -139,6 +141,8 @@ proc_create(char *name)
 
 	list_insert_tail(&_proc_list, &(new_proc->p_list_link));
 	list_insert_tail(&(curproc->p_children), &(new_proc->p_child_link));
+
+	if(PID_INIT == new_proc->p_pid) proc_initproc = new_proc;
 
 	/* VFS-related: */
 	int index = 0;
@@ -192,7 +196,6 @@ proc_cleanup(int status)
 	 * 	curporc->state = PROC_DEAD
 	 * 	curproc->status =status
 	 * 	set the process to PROC_DEAD (Zombie process)
-	 * 	remove this process from global _proc_list
 	 */
         NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");
 }
@@ -215,9 +218,11 @@ proc_kill(proc_t *p, int status)
 	 * for all threads (p->pthreads)
 	 * 		kthread_cancel(thr, 0); // gets to cancel kthread_exit after getting CPU
 	 * 		sched_make_runnable(kt_runqueue, thr);
-	 * sched_wakeup_on(p->parent->p_wait);
 	 * p->state = PROC_DEAD
 	 * p->status = status
+	 * sched_wakeup_on(p->parent->p_wait); // parent could be waiting for it to die
+	 * sched_switch(); // if its the curproc then it has to find a alternative process for CPU
+	 * Doubts : What will happen to the child processes coz the description doesn't specify anything about?
 	 *
 	 */
         NOT_YET_IMPLEMENTED("PROCS: proc_kill");
