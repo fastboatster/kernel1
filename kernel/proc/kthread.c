@@ -136,20 +136,21 @@ void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
     /* NOT_YET_IMPLEMENTED("PROCS: kthread_cancel"); */
-/*	if(kthr == curthr) {
+	/* if this is current thread, do kthread_exit:*/
+	if(kthr == curthr) {
 		kthread_exit(retval);
+		return;
 	};
+	/*if this is a sleeping thread, then:*/
+	/* set return value and cancelled status: */
 	kthr->kt_retval = retval;
+	kthr->kt_cancelled = 1;
+	/*if the thread is in cancellable sleep state, wake it up:*/
 	if(kthr->kt_state ==KT_SLEEP_CANCELLABLE) {
-		sched_wake_on();
-		sched_cancel(kthr);
+		sched_wakeup_on(&(kthr->kt_wchan));
+		/*sched_cancel(kthr);*/
 	}
-		kthr->kt_cancelled = 1;
-
-
-	}
-*/
-
+	/*if it just sleeps, do nothing else*/
 }
 
 /*
