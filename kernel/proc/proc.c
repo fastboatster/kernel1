@@ -139,7 +139,7 @@ proc_create(char *name)
 	new_proc->p_pagedir = pt_create_pagedir(); 				/* create page directory for the process */
 	KASSERT(NULL!=new_proc->p_pagedir);
 	list_insert_tail(&_proc_list, &(new_proc->p_list_link));
-	list_insert_tail(&(curproc->p_children), &(new_proc->p_child_link));
+	if(NULL != curproc) list_insert_tail(&(curproc->p_children), &(new_proc->p_child_link)); /* for idle process, there is no curproc */
 
 	/* set initproc global variable */
 	if(PID_INIT == new_proc->p_pid) proc_initproc = new_proc;
@@ -156,6 +156,7 @@ proc_create(char *name)
 	new_proc->p_start_brk = NULL;    /* initial value of process break */
 	new_proc->p_vmmap = NULL;        /* list of areas mapped into */
 
+	dbg_print("\nProcess created with pid = %d\n", new_proc->p_pid);
 	return new_proc;
 }
 

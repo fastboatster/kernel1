@@ -170,6 +170,12 @@ hard_shutdown()
 static void *
 bootstrap(int arg1, void *arg2)
 {
+	/*
+	 * PID  = 0 ; idle_proc
+	 * PID = 1; init_proc
+	 * PID = 2; pageoutd
+	 */
+		dbg_print("\nBootstrap Execution\n");
         /* necessary to finalize page table information */
         pt_template_init();
 
@@ -179,9 +185,9 @@ bootstrap(int arg1, void *arg2)
         KASSERT(PID_IDLE == idle_proc->p_pid); /* newly create process PID should match with IDLE_PID since its the first process that got created */
         kthread_t* idle_thr = kthread_create(idle_proc, idleproc_run, NULL, NULL);
         KASSERT(NULL != idle_thr);
-        context_make_active(&(idle_thr->kt_ctx)); /* to make idle execute right away */
         curproc = idle_proc; /* set current process */
         curthr = idle_thr; /* set current thread */
+        context_make_active(&(idle_thr->kt_ctx)); /* to make idle execute right away */
 
         /* NOT_YET_IMPLEMENTED("PROCS: bootstrap"); */
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
@@ -277,11 +283,14 @@ idleproc_run(int arg1, void *arg2)
 static kthread_t *
 initproc_create(void)
 {
+	/* NOT_YET_IMPLEMENTED("PROCS: initproc_create");
+	 * return NULL;
+	 */
+
 
 	        proc_t *init_proc=proc_create("Init");
 	        KASSERT(init_proc!=NULL);		/*Asserting that init_proc is not null*/
 	        KASSERT(init_proc->p_pid == PID_INIT); /* init_proc should have pid 1*/
-
 
 	        kthread_t *init_thr=kthread_create(curproc,initproc_run,NULL,NULL);
 	        KASSERT(init_thr!=NULL);
