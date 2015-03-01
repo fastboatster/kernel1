@@ -152,7 +152,7 @@ kthread_t* sched_wakeup_on(ktqueue_t *q)
 	newthr = ktqueue_dequeue(q);
 	newthr->kt_state = KT_RUN;
 	/* remove thread from wait queue*/
-	ktqueue_remove(q, newthr);
+	/*ktqueue_remove(q, newthr); */
 	/*make that thread runnable, i.e. add it to the run queue*/
 	sched_make_runnable(newthr);
 	return newthr;
@@ -169,7 +169,7 @@ void sched_broadcast_on(ktqueue_t *q)
 		newthr = ktqueue_dequeue(q);
 		newthr->kt_state = KT_RUN;
 		/* remove thread from wait queue*/
-		ktqueue_remove(q, newthr);
+		/*ktqueue_remove(q, newthr); */
 		/* add that thread to run queue*/
 		sched_make_runnable(newthr);
 	};

@@ -135,7 +135,21 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");
+    /* NOT_YET_IMPLEMENTED("PROCS: kthread_cancel"); */
+	if(kthr == curthr) {
+		kthread_exit(retval);
+	};
+	kthr->kt_retval = retval;
+	if(kthr->kt_state ==KT_SLEEP_CANCELLABLE) {
+		sched_wake_on();
+		sched_cancel(kthr);
+	}
+	/*	kthr->kt_cancelled = 1; */
+
+
+	}
+
+
 }
 
 /*
@@ -151,7 +165,12 @@ kthread_cancel(kthread_t *kthr, void *retval)
 void
 kthread_exit(void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_exit");
+       /* NOT_YET_IMPLEMENTED("PROCS: kthread_exit"); */
+	/* setting return value for the thread */
+	curthr->kt_retval = retval;
+	/*set threads status to exited */
+	curthr->kt_state = KT_EXITED;
+	proc_thread_exited(retval);
 }
 
 /*
