@@ -147,7 +147,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
 	kthr->kt_cancelled = 1;
 	/*if the thread is in cancellable sleep state, wake it up:*/
 	if(kthr->kt_state ==KT_SLEEP_CANCELLABLE) {
-		sched_wakeup_on(&(kthr->kt_wchan));
+		sched_wakeup_on((kthr->kt_wchan));
 		/*sched_cancel(kthr);*/
 	}
 	/*if it just sleeps, do nothing else*/
