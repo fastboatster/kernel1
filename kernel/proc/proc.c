@@ -45,6 +45,7 @@ static slab_allocator_t *proc_allocator = NULL;
 static list_t _proc_list;
 static proc_t *proc_initproc = NULL; /* Pointer to the init process (PID 1) */
 
+/*checks if that pid belongs to a child process of a current process*/
 static int is_child_proc(pid_t pid) {
 	proc_t *proc = proc_lookup(pid);
 	KASSERT(proc);
