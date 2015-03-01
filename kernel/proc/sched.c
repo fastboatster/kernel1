@@ -193,6 +193,8 @@ void sched_cancel(struct kthread *kthr)
 	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
 		kthr->kt_cancelled = 1;
 		ktqueue_remove(wait_q, kthr);
+		/* add that thread to the run queue*/
+		sched_make_runnable(kthr);
 	}
 	else {
 		kthr->kt_cancelled = 1;
