@@ -144,6 +144,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 kthread_t* sched_wakeup_on(ktqueue_t *q)
 {
     /* NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
+	KASSERT(q);
 	kthread_t* newthr;
 	if(sched_queue_empty(q)) {
         return NULL;
@@ -161,6 +162,7 @@ kthread_t* sched_wakeup_on(ktqueue_t *q)
 void sched_broadcast_on(ktqueue_t *q)
 {
        /* NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on"); */
+	KASSERT(q);
 	kthread_t* newthr;
 	if(sched_queue_empty(q)) {
 	        return;
@@ -188,6 +190,7 @@ void sched_broadcast_on(ktqueue_t *q)
 void sched_cancel(struct kthread *kthr)
 {
      /* NOT_YET_IMPLEMENTED("PROCS: sched_cancel"); */
+	KASSERT((kthr->kt_state==KT_NO_STATE)&&(kthr->kt_state==KT_EXITED));
 	/*get the queue that thread is sleeping on:*/
 	ktqueue_t *wait_q = kthr->kt_wchan;
 	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
