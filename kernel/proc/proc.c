@@ -116,6 +116,7 @@ proc_create(char *name)
 	/*
         NOT_YET_IMPLEMENTED("PROCS: proc_create");
         return NULL;
+
 	*/
 
 	int pid = _proc_getid();

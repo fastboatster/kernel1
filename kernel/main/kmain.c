@@ -187,6 +187,7 @@ bootstrap(int arg1, void *arg2)
         KASSERT(NULL != idle_thr);
         curproc = idle_proc; /* set current process */
         curthr = idle_thr; /* set current thread */
+        KASSERT(NULL != &(idle_thr->kt_ctx));
         context_make_active(&(idle_thr->kt_ctx)); /* to make idle execute right away */
 
         /* NOT_YET_IMPLEMENTED("PROCS: bootstrap"); */
