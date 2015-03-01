@@ -138,10 +138,10 @@ proc_create(char *name)
 	sched_queue_init(&(new_proc->p_wait)); 					/* initialize wait queue */
 	new_proc->p_pagedir = pt_create_pagedir(); 				/* create page directory for the process */
 	KASSERT(NULL!=new_proc->p_pagedir);
-
 	list_insert_tail(&_proc_list, &(new_proc->p_list_link));
 	list_insert_tail(&(curproc->p_children), &(new_proc->p_child_link));
 
+	/* set initproc global variable */
 	if(PID_INIT == new_proc->p_pid) proc_initproc = new_proc;
 
 	/* VFS-related: */

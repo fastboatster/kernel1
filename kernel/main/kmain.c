@@ -179,7 +179,7 @@ bootstrap(int arg1, void *arg2)
         KASSERT(PID_IDLE == idle_proc->p_pid); /* newly create process PID should match with IDLE_PID since its the first process that got created */
         kthread_t* idle_thr = kthread_create(idle_proc, idleproc_run, NULL, NULL);
         KASSERT(NULL != idle_thr);
-        context_make_active(&idle_thr->kt_ctx); /* to make idle execute right away */
+        context_make_active(&(idle_thr->kt_ctx)); /* to make idle execute right away */
         curproc = idle_proc; /* set current process */
         curthr = idle_thr; /* set current thread */
 
