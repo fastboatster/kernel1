@@ -116,6 +116,7 @@ sched_sleep_on(ktqueue_t *q)
      /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
 	curthr->kt_state = KT_SLEEP;
 	ktqueue_enqueue(q, curthr);
+	sched_switch();
 }
 
 
@@ -138,6 +139,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 	curthr->kt_state = KT_SLEEP_CANCELLABLE;
 	/* enqueue it to the given queue */
 	ktqueue_enqueue(q, curthr);
+	sched_switch();
         return 0;
 }
 
