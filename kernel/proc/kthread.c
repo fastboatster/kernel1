@@ -146,9 +146,9 @@ kthread_cancel(kthread_t *kthr, void *retval)
 	}
 		kthr->kt_cancelled = 1;
 
-*/
-	}
 
+	}
+*/
 
 }
 
