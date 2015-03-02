@@ -169,11 +169,6 @@ void
 kthread_exit(void *retval)
 {
        /* NOT_YET_IMPLEMENTED("PROCS: kthread_exit"); */
-	/* setting return value for the thread */
-	curthr->kt_retval = retval;
-	/*set threads status to exited */
-	curthr->kt_state = KT_EXITED;
-	proc_thread_exited(retval);
 }
 
 /*
