@@ -171,8 +171,8 @@ kthread_exit(void *retval)
 
 	
 	/* Looks like kthread_exit is called implicitly whenever a thread returns by invoking "return"*/
-	 curthr->retval = retval;
-	  curthr->state = KT_EXITED;
+	 curthr->kt_retval = retval;
+	  curthr->kt_state = KT_EXITED;
 	  proc_thread_exited(retval); /* this notifies the process so that it can handle the respective clean up */
 	 
       
