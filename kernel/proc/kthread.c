@@ -109,6 +109,8 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	new_thr->kt_errno = NULL;
 	new_thr->kt_cancelled = 0;
 	new_thr->kt_state  = KT_RUN; /* make it runnable */
+	/*initialize pointer to kt_wchan to NULL:*/
+	new_thr->kt_wchan = NULL;
 	/* setup context, very gross looking */
 	context_setup(&(new_thr->kt_ctx), func, arg1, arg2, new_thr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
 	/* insert the thread into the list of all the threads in the process p:*/
