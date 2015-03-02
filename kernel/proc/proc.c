@@ -209,7 +209,6 @@ proc_cleanup(int status)
 			KASSERT(NULL != p);
 			list_insert_tail(&(proc_initproc->p_children), &(p->p_child_link));
 			p->p_pproc = proc_initproc;
-			/* list_remove_head(&curproc->p_children); */
 			list_remove(&p->p_child_link); /* removes the child from its parent list using next and prev pointers */
 		} list_iterate_end();
 
@@ -217,7 +216,6 @@ proc_cleanup(int status)
 		curproc->p_state = PROC_DEAD;	/* mark the process is DEAD */
 		KASSERT(NULL != &(curproc->p_pproc->p_wait));
 		sched_wakeup_on(&(curproc->p_pproc->p_wait));	/* wake up the parent process it may wait for the child to die */
-		sched_switch();		/* Since the running process is getting killed/DEAD, hand over CPU to another process */
 
        /*NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");*/
 }
@@ -257,7 +255,7 @@ proc_kill(proc_t *p, int status)
 			KASSERT(NULL != thr);
 			kthread_cancel(thr, 0);
 			sched_make_runnable(thr);
-			list_remove(&thr->kt_qlink); /* removes the thread from the thread list */
+			/* list_remove(&thr->kt_qlink); removes the thread from the thread list */
 		} list_iterate_end();
 
 		/* iterate over all the child processes and re-parent them */
@@ -288,7 +286,15 @@ proc_kill(proc_t *p, int status)
 void
 proc_kill_all()
 {
-        NOT_YET_IMPLEMENTED("PROCS: proc_kill_all");
+        /*NOT_YET_IMPLEMENTED("PROCS: proc_kill_all");*/
+		proc_t* child;
+		list_iterate_begin(&_proc_list, child, proc_t, p_child_link) {
+			KASSERT(NULL != child);
+			/* kill all the process except IDLE and direct children of IDLE */
+			if(PID_IDLE != child->p_pid && PID_IDLE != child->p_pproc->p_pid)
+				proc_kill(child, child->p_status);
+		} list_iterate_end();
+
 }
 
 /*
@@ -363,7 +369,7 @@ do_waitpid(pid_t pid, int options, int *status)
 							break; /* process is dead (given pid) */
 						} else {
 							sched_sleep_on(&curproc->p_wait);
-							goto pid_check; /* if some other thread/process wakes up this process process */
+							goto pid_check; /* if some other thread/process wakes up this process */
 						}
 				}
 			}
@@ -379,9 +385,18 @@ do_waitpid(pid_t pid, int options, int *status)
 			*status = dead_child->p_status;
 			dead_child_pid = dead_child->p_pid;
 
+			/* cleanup the thread space of the dead process */
+			kthread_t* thr;
+            list_iterate_begin(&(dead_child->p_threads), thr, kthread_t, kt_plink) {
+            	KASSERT(KT_EXITED == thr->kt_state);
+                kthread_destroy(thr);
+            } list_iterate_end();
+
 			/* clean up process space */
 			list_remove(&dead_child->p_list_link); /* remove child from the global list */
 			list_remove(&dead_child->p_child_link); /* remove child from parents(curproc) child list */
+            KASSERT(NULL != dead_child->p_pagedir);
+            pt_destroy_pagedir(dead_child->p_pagedir); /* destroy the page directory of the process */
 			slab_obj_free(proc_allocator, dead_child); /* free up the space allocated for this dead process */
 
 			return dead_child_pid;
