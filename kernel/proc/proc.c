@@ -277,27 +277,7 @@ proc_thread_exited(void *retval)
  * Pids other than -1 and positive numbers are not supported.
  * Options other than 0 are not supported.
  */
-pid_t do_waitpid(pid_t pid, int options, int *status)
-{
-	KASSERT(!(pid < -1) && (pid != 0));
-	KASSERT(options == 0);
-	/*  NOT_YET_IMPLEMENTED("PROCS: do_waitpid"); */
-	/*get list of child processes:*/
 
-	list_t child_procs = curproc->p_children;
-
-	if(list_empty(&child_procs) || !is_child_proc(pid) ) {
-
-		return -ECHILD;
-	};
-	/*sleep on own proc queue until the child we're looking for is dead */
-	sched_sleep_on(&(curproc->p_wait));
-	while(!is_child_dead(pid, status)) {
-		sched_sleep_on(&(curproc->p_wait));
-	};
-
-	return pid;
-}
 
 /*
  * Cancel all threads, join with them, and exit from the current
