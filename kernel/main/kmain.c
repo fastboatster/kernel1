@@ -290,12 +290,10 @@ initproc_create(void)
 
 
 	        proc_t *init_proc=proc_create("Init");
-	        KASSERT(init_proc!=NULL);		/*Asserting that init_proc is not null*/
+	        KASSERT(NULL != init_proc);		/*Asserting that init_proc is not null*/
 	        KASSERT(init_proc->p_pid == PID_INIT); /* init_proc should have pid 1*/
-
-	        kthread_t *init_thr=kthread_create(curproc,initproc_run,NULL,NULL);
-	        KASSERT(init_thr!=NULL);
-
+	        kthread_t *init_thr=kthread_create(init_proc,initproc_run,NULL,NULL);
+	        KASSERT(NULL != init_thr);
 	        return init_thr;
 }
 
