@@ -210,6 +210,7 @@ proc_cleanup(int status)
 			list_insert_tail(&(proc_initproc->p_children), &(p->p_child_link));
 			p->p_pproc = proc_initproc;
 			/* list_remove_head(&curproc->p_children); */
+			list_remove(&p->p_child_link); /* removes the child from its parent list using next and prev pointers */
 		} list_iterate_end();
 
 		curproc->p_status = status;		/* set the status for the current process, this will be returned to the parent when it calls do_waitpid() */
@@ -256,6 +257,7 @@ proc_kill(proc_t *p, int status)
 			KASSERT(NULL != thr);
 			kthread_cancel(thr, 0);
 			sched_make_runnable(thr);
+			list_remove(&thr->kt_qlink); /* removes the thread from the thread list */
 		} list_iterate_end();
 
 		/* iterate over all the child processes and re-parent them */
@@ -264,7 +266,7 @@ proc_kill(proc_t *p, int status)
 			KASSERT(NULL != child);
 			list_insert_tail(&(proc_initproc->p_children), &(p->p_child_link));
 			child->p_pproc = proc_initproc;
-			/* list_remove_head(&p->p_children); */
+			list_remove(&child->p_child_link); /* removes the child from its list using its next and prev pointers */
 		} list_iterate_end();
 
 		p->p_status = status;	/* set the status for the process */
@@ -332,58 +334,62 @@ proc_thread_exited(void *retval)
 pid_t
 do_waitpid(pid_t pid, int options, int *status)
 {
-	 KASSERT(NULL != curproc && NULL!= &(curproc->p_children));
-	 KASSERT((NULL != pid && pid>0) || (-1 == pid));
-	 KASSERT(0 == options);
-	 if(list_empty(&curproc->p_children)) return -ECHILD;
+		KASSERT(NULL != curproc && NULL!= &(curproc->p_children));
+		KASSERT((NULL != pid && pid>0) || (-1 == pid));
+		KASSERT(0 == options);
+		if(list_empty(&curproc->p_children)) return -ECHILD;
 
-	 int pid_found = 0;
-	 int found_dead_child = 0;
-	 int dead_pid = -1;
-	 proc_t* dead_child;
+		int pid_found = 0;
+		int found_dead_child = 0;
+		int dead_child_pid = -1;
+		proc_t* dead_child;
 
-	 proc_t* child;
-	 wait_pid:
-	 	 list_iterate_begin(&curproc->p_children, child, proc_t, p_child_link) {
-	 		if(-1 == pid) {
-	 			pid_found = 1;
-	 			if(PROC_DEAD == child->p_state) {
-	 				found_dead_child = 1;
-	 				dead_child = child;
-	 				break;
-	 			}
-	 		}else {
-	 			if(pid == child->p_pid) {
-	 				pid_check:
-	 					if(PROC_DEAD == child->p_state) {
-	 						found_dead_child = 1;
-	 						dead_child = child;
-	 						break;
-	 					} else {
-	 						sched_sleep_on(&curproc->p_wait);
-	 						goto pid_check;
-	 					}
-	 			}
-	 		}
-	 	}list_iterate_end();
+		proc_t* child;
+		wait_pid: /* label for goto */
+		 list_iterate_begin(&curproc->p_children, child, proc_t, p_child_link) {
+			if(-1 == pid) { /* user is not interested in specific pid */
+				pid_found = 1;
+				if(PROC_DEAD == child->p_state) { /* any of the child process is dead */
+					found_dead_child = 1;
+					dead_child = child;
+					break;	/* once we found the child that's dead */
+				}
+			}else {
+				if(pid == child->p_pid) {
+					pid_check: /* label for goto */
+						if(PROC_DEAD == child->p_state) {
+							found_dead_child = 1;
+							dead_child = child;
+							break; /* process is dead (given pid) */
+						} else {
+							sched_sleep_on(&curproc->p_wait);
+							goto pid_check; /* if some other thread/process wakes up this process process */
+						}
+				}
+			}
+		}list_iterate_end();
 
-	  if(0 == pid_found) return -ECHILD;
-	  if(0 == found_dead_child) {
-	  		sched_sleep_on(&curproc->p_wait);
-	  		goto wait_pid;
-	  }
-	  else if(1 == found_dead_child){
-	 		KASSERT(NULL != dead_child);
-	 		*status = dead_child->p_status;
-	 		dead_pid = dead_child->p_pid;
-	 		slab_obj_free(proc_allocator, dead_child);
-	 		return dead_pid;
-	 }
+		if(0 == pid_found) return -ECHILD; /*given PID couldnt be found from the curpocess child list */
+		if(0 == found_dead_child) { /* Process is fond and it is not dead, wait for it till it dies */
+			sched_sleep_on(&curproc->p_wait);
+			goto wait_pid;
+		}
+		else { /* found_dead_child ==  1*/
+			KASSERT(NULL != dead_child);
+			*status = dead_child->p_status;
+			dead_child_pid = dead_child->p_pid;
 
+			/* clean up process space */
+			list_remove(&dead_child->p_list_link); /* remove child from the global list */
+			list_remove(&dead_child->p_child_link); /* remove child from parents(curproc) child list */
+			slab_obj_free(proc_allocator, dead_child); /* free up the space allocated for this dead process */
 
+			return dead_child_pid;
+		}
 
-        NOT_YET_IMPLEMENTED("PROCS: do_waitpid");
+        /* NOT_YET_IMPLEMENTED("PROCS: do_waitpid");
         return 0;
+        */
 }
 
 /*
