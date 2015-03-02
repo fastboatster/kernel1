@@ -45,6 +45,43 @@ static slab_allocator_t *proc_allocator = NULL;
 static list_t _proc_list;
 static proc_t *proc_initproc = NULL; /* Pointer to the init process (PID 1) */
 
+/*checks if that pid belongs to a child process of a current process*/
+static int is_child_proc(pid_t pid) {
+	proc_t *proc = proc_lookup(pid);
+	KASSERT(proc);
+	list_link_t *link = &(curproc->p_child_link); /*get a link in the child procs list*/
+	list_t * list = &(curproc->p_children); /*get a child procs list*/
+		for (link = list->l_next; link != list; link = link->l_next) {
+			if(list_item(link, proc_t, p_child_link) == proc) {
+				return 1;
+			}
+		}
+	return 0;
+}
+/*checks if a child process with particular pid or any child proc is dead (if pid == 01) and
+ * deletes that dead child process, returns status to int* status */
+
+static int is_child_dead(pid_t pid, int* status) {
+	/*we iterate over the list of curproc's children*/
+	list_link_t *link = &(curproc->p_child_link); /*get a link in the child procs list*/
+	list_t * list = &(curproc->p_children); /*get a child procs list*/
+	for (link = list->l_next; link != list; link = link->l_next) {
+		proc_t* child = list_item(link, proc_t, p_child_link);
+		if((pid==-1) && child->p_state == PROC_DEAD) {
+			*status = child->p_status;
+			slab_obj_free(proc_allocator, child);
+			return 1;
+		};
+		if((pid !=- 1) && (child->p_state ==PROC_DEAD) && (child->p_pid == pid)) {
+			*status  = child->p_status;
+			slab_obj_free(proc_allocator, child);
+			return 1;
+		};
+	};
+	/*if no child are dead, return 0*/
+	return 0;
+}
+
 void
 proc_init()
 {
@@ -337,6 +374,7 @@ proc_thread_exited(void *retval)
  * Pids other than -1 and positive numbers are not supported.
  * Options other than 0 are not supported.
  */
+
 pid_t
 do_waitpid(pid_t pid, int options, int *status)
 {
@@ -525,3 +563,6 @@ proc_list_info(const void *arg, char *buf, size_t osize)
         } list_iterate_end();
         return size;
 }
+
+
+

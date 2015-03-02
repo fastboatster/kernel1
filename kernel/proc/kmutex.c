@@ -28,7 +28,9 @@
 void
 kmutex_init(kmutex_t *mtx)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kmutex_init");
+      /*  NOT_YET_IMPLEMENTED("PROCS: kmutex_init"); */
+	sched_queue_init(&(mtx->km_waitq)); /* init the wait queue in mutex mtx */
+	mtx->km_holder = NULL; /* set the mutex holder to null */
 }
 
 /*

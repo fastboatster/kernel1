@@ -109,6 +109,8 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	new_thr->kt_errno = NULL;
 	new_thr->kt_cancelled = 0;
 	new_thr->kt_state  = KT_RUN; /* make it runnable */
+	/*initialize pointer to kt_wchan to NULL:*/
+	new_thr->kt_wchan = NULL;
 	/* setup context, very gross looking */
 	context_setup(&(new_thr->kt_ctx), func, arg1, arg2, new_thr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
 	/* insert the thread into the list of all the threads in the process p:*/
@@ -135,7 +137,22 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");
+    /* NOT_YET_IMPLEMENTED("PROCS: kthread_cancel"); */
+	/* if this is current thread, do kthread_exit:*/
+	if(kthr == curthr) {
+		kthread_exit(retval);
+		return;
+	};
+	/*if this is a sleeping thread, then:*/
+	/* set return value and cancelled status: */
+	kthr->kt_retval = retval;
+	kthr->kt_cancelled = 1;
+	/*if the thread is in cancellable sleep state, wake it up:*/
+	if(kthr->kt_state ==KT_SLEEP_CANCELLABLE) {
+		sched_wakeup_on((kthr->kt_wchan));
+		/*sched_cancel(kthr);*/
+	}
+	/*if it just sleeps, do nothing else*/
 }
 
 /*
@@ -151,14 +168,16 @@ kthread_cancel(kthread_t *kthr, void *retval)
 void
 kthread_exit(void *retval)
 {
-	/*
-	 * Looks like kthread_exit is called implicitly whenever a thread returns by invoking "return"
-	 *
-	 * curthr->retval = retval
-	 * curthr->state = KT_EXITED
-	 * proc_thread_exited(retval) // this notifies the process so that it can handle the respective clean up
-	 */
-        NOT_YET_IMPLEMENTED("PROCS: kthread_exit");
+
+	
+	/* Looks like kthread_exit is called implicitly whenever a thread returns by invoking "return"*/
+	 curthr->retval = retval;
+	  curthr->state = KT_EXITED;
+	  proc_thread_exited(retval); /* this notifies the process so that it can handle the respective clean up */
+	 
+      
+       /* NOT_YET_IMPLEMENTED("PROCS: kthread_exit"); */
+
 }
 
 /*
