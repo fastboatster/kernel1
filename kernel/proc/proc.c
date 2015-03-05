@@ -135,6 +135,7 @@ proc_create(char *name)
 	new_proc->p_status = NULL;
 	new_proc->p_state = PROC_RUNNING;
 	sched_queue_init(&(new_proc->p_wait)); 		/* initialize wait queue */
+	/*new_proc->p_wait = NULL;*/
 	new_proc->p_pagedir = pt_create_pagedir(); 	/* create page directory for the process */
 	KASSERT(NULL!=new_proc->p_pagedir);
 	list_insert_tail(&_proc_list, &(new_proc->p_list_link));
@@ -188,6 +189,7 @@ proc_create(char *name)
 void
 proc_cleanup(int status)
 {
+	dbg(DBG_PRINT, "proc_cleanup()");
 	/* This function is called when a thread that exits is the last thread of the process
 	 * for(int i =0 ; i<NFILES; i++)
 	 * 		close(i)
@@ -206,6 +208,7 @@ proc_cleanup(int status)
 	KASSERT(NULL != curproc); 	/* when cleanup is called, curproc cannot be NULL*/
 	KASSERT(PID_INIT != curproc->p_pid && PID_IDLE != curproc->p_pid);
 
+	dbg(DBG_PRINT, "Current PID : %d, Parent PID : %d\n", curproc->p_pid, curproc->p_pproc->p_pid);
 	/* iterate over all the child processes */
 	proc_t *p;
 	list_iterate_begin(&curproc->p_children, p, proc_t, p_child_link)
@@ -326,8 +329,8 @@ proc_thread_exited(void *retval)
 	/* NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");*/
 
 	KASSERT(NULL != curproc);
-	if (list_empty(&(curproc->p_threads)))
-		proc_cleanup(curproc->p_status);
+	/*if (list_empty(&(curproc->p_threads)))*/
+	proc_cleanup(curproc->p_status);
 	sched_switch();
 }
 
@@ -352,7 +355,7 @@ do_waitpid(pid_t pid, int options, int *status)
 	/* NOT_YET_IMPLEMENTED("PROCS: do_waitpid");
 	 return 0;
 	 */
-
+	dbg(DBG_PRINT, "\nwaitpid called from process : %d\n", curproc->p_pid);
 	KASSERT(NULL != curproc && NULL!= &(curproc->p_children));
 	KASSERT((NULL != pid && pid>0) || (-1 == pid));
 	KASSERT(0 == options);
@@ -361,7 +364,6 @@ do_waitpid(pid_t pid, int options, int *status)
 
 	int pid_found = 0;
 	int found_dead_child = 0;
-	int dead_child_pid = -1;
 	proc_t* dead_child;
 
 	proc_t* child;
@@ -383,6 +385,7 @@ do_waitpid(pid_t pid, int options, int *status)
 					dead_child = child;
 					break; /* process is dead (given pid) */
 				} else {
+					dbg(DBG_PRINT, "\n current process is going for sleep\n");
 					sched_sleep_on(&curproc->p_wait);
 					goto pid_check; /* if some other thread/process wakes up this process */
 				}
@@ -394,18 +397,20 @@ do_waitpid(pid_t pid, int options, int *status)
 		return -ECHILD; /*given PID couldnt be found from the curpocess child list */
 	if (0 == found_dead_child) { /* Process is fond and it is not dead, wait for it till it dies */
 		sched_sleep_on(&curproc->p_wait);
+		dbg(DBG_PRINT, "\nGot the signal from one of its child, Current proc PID : %d\n", curproc->p_pid);
 		goto wait_pid;
 	} else { /* found_dead_child ==  1*/
+
 		KASSERT(NULL != dead_child);
-		*status = dead_child->p_status;
-		dead_child_pid = dead_child->p_pid;
+		status = dead_child->p_status;
+		pid_t dead_child_pid = dead_child->p_pid;
 
 		/* cleanup the thread space of the dead process */
 		kthread_t* thr;
 		list_iterate_begin(&(dead_child->p_threads), thr, kthread_t, kt_plink)
 		{
 			KASSERT(KT_EXITED == thr->kt_state);
-			kthread_destroy(thr);
+			/*kthread_destroy(thr);*/
 		}list_iterate_end();
 
 		/* clean up process space */
