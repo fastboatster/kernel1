@@ -364,7 +364,6 @@ do_waitpid(pid_t pid, int options, int *status)
 
 	int pid_found = 0;
 	int found_dead_child = 0;
-	int dead_child_pid = -1;
 	proc_t* dead_child;
 
 	proc_t* child;
@@ -401,16 +400,17 @@ do_waitpid(pid_t pid, int options, int *status)
 		dbg(DBG_PRINT, "\nGot the signal from one of its child, Current proc PID : %d\n", curproc->p_pid);
 		goto wait_pid;
 	} else { /* found_dead_child ==  1*/
+
 		KASSERT(NULL != dead_child);
-		*status = 0 /*dead_child->p_status*/;
-		dead_child_pid = dead_child->p_pid;
+		status = dead_child->p_status;
+		pid_t dead_child_pid = dead_child->p_pid;
 
 		/* cleanup the thread space of the dead process */
 		kthread_t* thr;
 		list_iterate_begin(&(dead_child->p_threads), thr, kthread_t, kt_plink)
 		{
 			KASSERT(KT_EXITED == thr->kt_state);
-			/* kthread_destroy(thr); */
+			/*kthread_destroy(thr);*/
 		}list_iterate_end();
 
 		/* clean up process space */
