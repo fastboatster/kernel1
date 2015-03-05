@@ -107,6 +107,7 @@ kmain()
 #endif
         vmmap_init();
         proc_init();
+        dbg(DBG_PRINT, "Gotta initialize kthread\n");
         kthread_init();
 
 #ifdef __DRIVERS__
@@ -287,8 +288,6 @@ initproc_create(void)
 	/* NOT_YET_IMPLEMENTED("PROCS: initproc_create");
 	 * return NULL;
 	 */
-
-
 	        proc_t *init_proc=proc_create("Init");
 	        KASSERT(NULL != init_proc);		/*Asserting that init_proc is not null*/
 	        KASSERT(init_proc->p_pid == PID_INIT); /* init_proc should have pid 1*/
@@ -308,10 +307,36 @@ initproc_create(void)
  * @param arg1 the first argument (unused)
  * @param arg2 the second argument (unused)
  */
+extern void *faber_thread_test(int, void*);
+static void* my_faber_thread_test(char** msg){
+	dbg(DBG_PRINT, "Executing faber_thread_test");
+	faber_thread_test(1, NULL);
+	return NULL;
+}
 static void *
 initproc_run(int arg1, void *arg2)
 {
-        NOT_YET_IMPLEMENTED("PROCS: initproc_run");
 
-        return NULL;
+	dbg(DBG_PRINT, "Executing init proc run");
+
+    /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
+    /*
+	kshell_add_command("faber_test", my_faber_thread_test, "Run faber_thread_test().");
+    kshell_t *kshell = kshell_create(0);
+    if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
+    while (kshell_execute_next(kshell));
+    kshell_destroy(kshell);
+    */
+
+	proc_t* new_proc = proc_create("faber_test");
+	KASSERT(NULL != new_proc);
+	kthread_t *new_thr = kthread_create(new_proc, faber_thread_test, 1, NULL);
+	KASSERT(NULL != new_thr);
+	dbg(DBG_PRINT, "faber_test process created with pid %d\n", new_proc->p_pid);
+	sched_make_runnable(new_thr);
+
+	do_waitpid(-1, 0, NULL);
+	/* KASSERT(faber_test_pid == new_proc->p_pid); */
+
+    return NULL;
 }
