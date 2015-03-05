@@ -79,12 +79,16 @@ free_stack(char *stack)
 void
 kthread_destroy(kthread_t *t)
 {
-        KASSERT(t && t->kt_kstack);
-        free_stack(t->kt_kstack);
-        if (list_link_is_linked(&t->kt_plink))
+		/*
+		 * Free up all the space used for kthread
+		 */
+        KASSERT(NULL != t);
+        KASSERT(NULL != t->kt_kstack);
+        free_stack(t->kt_kstack);			   /* free up the stack */
+        if (list_link_is_linked(&t->kt_plink)) /* remove the link on proc thread list */
                 list_remove(&t->kt_plink);
-
-        slab_obj_free(kthread_allocator, t);
+        KASSERT(NULL != kthread_allocator);
+        slab_obj_free(kthread_allocator, t);	/* free up the thread space */
 }
 
 /*
@@ -140,6 +144,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
 {
     /* NOT_YET_IMPLEMENTED("PROCS: kthread_cancel"); */
 	/* if this is current thread, do kthread_exit:*/
+	KASSERT(NULL != kthr);
 	if(kthr == curthr) {
 		kthread_exit(retval);
 		return;
@@ -149,7 +154,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
 	kthr->kt_retval = retval;
 	kthr->kt_cancelled = 1;
 	/*if the thread is in cancellable sleep state, wake it up:*/
-	if(kthr->kt_state ==KT_SLEEP_CANCELLABLE) {
+	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
 		sched_wakeup_on((kthr->kt_wchan));
 		/*sched_cancel(kthr);*/
 	}
@@ -169,16 +174,12 @@ kthread_cancel(kthread_t *kthr, void *retval)
 void
 kthread_exit(void *retval)
 {
-
-	
-	/* Looks like kthread_exit is called implicitly whenever a thread returns by invoking "return"*/
-	 curthr->kt_retval = retval;
-	  curthr->kt_state = KT_EXITED;
-	  proc_thread_exited(retval); /* this notifies the process so that it can handle the respective clean up */
-	 
-      
-       /* NOT_YET_IMPLEMENTED("PROCS: kthread_exit"); */
-
+		dbg(DBG_PRINT, "\nkthread_exit()\n");
+		/* Looks like kthread_exit is called implicitly whenever a thread returns by invoking "return"*/
+		/* NOT_YET_IMPLEMENTED("PROCS: kthread_exit"); */
+		curthr->kt_retval = retval;
+		curthr->kt_state = KT_EXITED;
+		proc_thread_exited(retval); /* this notifies the process so that it can handle the respective clean up */
 }
 
 /*
