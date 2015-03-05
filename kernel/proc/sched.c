@@ -271,7 +271,7 @@ void sched_switch(void)
 	dbg(DBG_PRINT, "Got the new thread for CPU %d\n", curproc->p_pid);
 	context_switch(&(old_thread->kt_ctx), &(curthr->kt_ctx));
 	/*make current thread context active: */
-	/*context_make_active(&(curthr->kt_ctx));*/
+	/*context_make_active(&(curthr->kt_ctx)); we need to make the context active only once */
 	/*re-enable interrupts again:*/
 	intr_setipl(old_ipl); /*not sure about this as it might not be defined in the new threads context*/
 	dbg(DBG_PRINT, "\n new thread entered into CPU %d\n", curproc->p_pid);
