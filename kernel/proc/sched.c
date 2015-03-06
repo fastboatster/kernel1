@@ -159,6 +159,7 @@ kthread_t* sched_wakeup_on(ktqueue_t *q)
 	/* remove thread from wait queue*/
 	/*ktqueue_remove(q, newthr); */
 	/*make that thread runnable, i.e. add it to the run queue*/
+	/*if(KT_SLEEP == newthr->kt_state || KT_SLEEP_CANCELLABLE == newthr->kt_state)*/
 	sched_make_runnable(newthr);
 	return newthr;
 }
@@ -194,7 +195,7 @@ void sched_broadcast_on(ktqueue_t *q)
 void sched_cancel(struct kthread *kthr)
 {
      /* NOT_YET_IMPLEMENTED("PROCS: sched_cancel"); */
-	KASSERT((kthr->kt_state==KT_NO_STATE)&&(kthr->kt_state==KT_EXITED));
+	KASSERT(!(kthr->kt_state==KT_NO_STATE) && !(kthr->kt_state==KT_EXITED));
 	/*get the queue that thread is sleeping on:*/
 	ktqueue_t *wait_q = kthr->kt_wchan;
 	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
@@ -297,7 +298,6 @@ sched_make_runnable(kthread_t *thr)
     /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
 
 	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/
-
 	uint8_t old_ipl = intr_getipl(); /*get and save current interrupt level*/
 	intr_setipl(IPL_HIGH);
 	/* set the thread state to runnable:*/
