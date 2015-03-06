@@ -198,6 +198,7 @@ void sched_cancel(struct kthread *kthr)
 	KASSERT(!(kthr->kt_state==KT_NO_STATE) && !(kthr->kt_state==KT_EXITED));
 	/*get the queue that thread is sleeping on:*/
 	ktqueue_t *wait_q = kthr->kt_wchan;
+
 	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
 		kthr->kt_cancelled = 1;
 		ktqueue_remove(wait_q, kthr);
