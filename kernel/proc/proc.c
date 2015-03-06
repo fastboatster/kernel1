@@ -189,7 +189,7 @@ proc_create(char *name)
 void
 proc_cleanup(int status)
 {
-	dbg(DBG_PRINT, "proc_cleanup()");
+	dbg(DBG_PRINT, "proc_cleanup(), Status value :%d\n", status);
 	/* This function is called when a thread that exits is the last thread of the process
 	 * for(int i =0 ; i<NFILES; i++)
 	 * 		close(i)
@@ -330,7 +330,7 @@ proc_thread_exited(void *retval)
 
 	KASSERT(NULL != curproc);
 	/*if (list_empty(&(curproc->p_threads)))*/
-	proc_cleanup(curproc->p_status);
+	proc_cleanup((int)retval);
 	sched_switch();
 }
 
@@ -355,12 +355,14 @@ do_waitpid(pid_t pid, int options, int *status)
 	/* NOT_YET_IMPLEMENTED("PROCS: do_waitpid");
 	 return 0;
 	 */
-	dbg(DBG_PRINT, "\nwaitpid called from process : %d\n", curproc->p_pid);
+	dbg(DBG_PRINT, "\nwaitpid called from process : %d for PID : %d \n", curproc->p_pid, pid);
 	KASSERT(NULL != curproc && NULL!= &(curproc->p_children));
 	KASSERT((NULL != pid && pid>0) || (-1 == pid));
 	KASSERT(0 == options);
-	if (list_empty(&curproc->p_children))
+	if (list_empty(&curproc->p_children)){
+		if(status) *status = -1;
 		return -ECHILD;
+	}
 
 	int pid_found = 0;
 	int found_dead_child = 0;
@@ -379,6 +381,7 @@ do_waitpid(pid_t pid, int options, int *status)
 			}
 		} else {
 			if (pid == child->p_pid) {
+				pid_found = 1;
 				pid_check: /* label for goto */
 				if (PROC_DEAD == child->p_state) {
 					found_dead_child = 1;
@@ -387,22 +390,26 @@ do_waitpid(pid_t pid, int options, int *status)
 				} else {
 					dbg(DBG_PRINT, "\n current process is going for sleep\n");
 					sched_sleep_on(&curproc->p_wait);
+					dbg(DBG_PRINT, "Gotta execute again.. waiting for %d ; parent %d\n", child->p_pid, curproc->p_pid);
 					goto pid_check; /* if some other thread/process wakes up this process */
 				}
 			}
 		}
 	}list_iterate_end();
 
-	if (0 == pid_found)
+	if (0 == pid_found) {
+		dbg(DBG_PRINT, "Get to execute pid_found == 0");
+		if(status) *status = -1;
 		return -ECHILD; /*given PID couldnt be found from the curpocess child list */
+	}
 	if (0 == found_dead_child) { /* Process is fond and it is not dead, wait for it till it dies */
 		sched_sleep_on(&curproc->p_wait);
-		dbg(DBG_PRINT, "\nGot the signal from one of its child, Current proc PID : %d\n", curproc->p_pid);
+		dbg(DBG_PRINT, "\nGot the signal from one of its child while waiting for PID : %d, Current proc PID : %d\n", pid, curproc->p_pid);
 		goto wait_pid;
 	} else { /* found_dead_child ==  1*/
 
 		KASSERT(NULL != dead_child);
-		status = dead_child->p_status;
+		if(status) *status = dead_child->p_status;
 		pid_t dead_child_pid = dead_child->p_pid;
 
 		/* cleanup the thread space of the dead process */
