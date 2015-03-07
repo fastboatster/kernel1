@@ -87,8 +87,17 @@ kmutex_lock(kmutex_t *mtx) {
 int
 kmutex_lock_cancellable(kmutex_t *mtx)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kmutex_lock_cancellable");
-        return 0;
+       /* NOT_YET_IMPLEMENTED("PROCS: kmutex_lock_cancellable"); */
+	int status =0;
+	if(mtx->km_holder) {
+		/*ktqueue_enqueue(&(mtx->km_waitq), curthr);*/
+		status = sched_cancellable_sleep_on(&(mtx->km_waitq));
+		sched_switch();
+	}
+	else {
+		mtx->km_holder = curthr;
+	};
+        return status;
 }
 
 /*
