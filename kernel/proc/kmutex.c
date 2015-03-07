@@ -40,9 +40,15 @@ kmutex_init(kmutex_t *mtx)
  * No thread should ever try to lock a mutex it already has locked.
  */
 void
-kmutex_lock(kmutex_t *mtx)
-{
-        NOT_YET_IMPLEMENTED("PROCS: kmutex_lock");
+kmutex_lock(kmutex_t *mtx) {
+     /* NOT_YET_IMPLEMENTED("PROCS: kmutex_lock"); */
+	if(mtx->km_holder) {
+		ktqueue_enqueue(&(mtx->km_waitq), curthr);
+		sched_switch();
+	}
+	else
+		mtx->km_holder = curthr;
+	}
 }
 
 /*
