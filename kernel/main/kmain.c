@@ -335,8 +335,7 @@ initproc_run(int arg1, void *arg2)
 	dbg(DBG_PRINT, "faber_test process created with pid %d\n", new_proc->p_pid);
 	sched_make_runnable(new_thr);
 
-	do_waitpid(-1, 0, NULL);
-	/* KASSERT(faber_test_pid == new_proc->p_pid); */
-
+	/* waits for all children to die */
+	while(do_waitpid(-1, 0, NULL) != -ECHILD);
     return NULL;
 }

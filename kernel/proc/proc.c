@@ -206,7 +206,7 @@ proc_cleanup(int status)
 	/* NOT_YET_IMPLEMENTED("PROCS: proc_cleanup"); */
 
 	KASSERT(NULL != curproc); 	/* when cleanup is called, curproc cannot be NULL*/
-	KASSERT(PID_INIT != curproc->p_pid && PID_IDLE != curproc->p_pid);
+	KASSERT(PID_IDLE != curproc->p_pid);
 
 	dbg(DBG_PRINT, "Current PID : %d, Parent PID : %d\n", curproc->p_pid, curproc->p_pproc->p_pid);
 	/* iterate over all the child processes */
