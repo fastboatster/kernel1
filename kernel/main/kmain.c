@@ -308,67 +308,62 @@ initproc_create(void)
  * @param arg2 the second argument (unused)
  */
 extern void *faber_thread_test(int, void*);
-static void* my_faber_thread_test(char** msg){
+static int my_faber_thread_test(kshell_t* kshell, int argc, char** argv) {
 	dbg(DBG_PRINT, "Executing faber_thread_test");
-	faber_thread_test(1, NULL);
+	proc_t* new_faber_proc = proc_create("faber_test");
+	KASSERT(NULL != new_faber_proc);
+	kthread_t *new_faber_thr = kthread_create(new_faber_proc, faber_thread_test, 1, NULL);
+	KASSERT(NULL != new_faber_thr);
+	dbg(DBG_PRINT, "faber_test process created with pid %d\n", new_faber_proc->p_pid);
+	sched_make_runnable(new_faber_thr);
+	while(do_waitpid(-1, 0, NULL) != -ECHILD);
 	return NULL;
 }
 extern void *sunghan_test(int, void*);
-static void* my_sunghan_test(char** msg){
+static int my_sunghan_test(kshell_t* kshell, int argc, char** argv){
 	dbg(DBG_PRINT, "Executing sunghun test");
-	sunghan_test(1, NULL);
+	proc_t *new_sunghan_test = proc_create("sunghun_test");
+	KASSERT(NULL != new_sunghan_test);
+	kthread_t *new_sunghan_thr = kthread_create(new_sunghan_test, sunghan_test, 1, NULL);
+	KASSERT(NULL != new_sunghan_thr);
+	dbg(DBG_PRINT, "sunghun_test process created with pid %d\n", new_sunghan_test->p_pid);
+	sched_make_runnable(new_sunghan_thr);
+	while(do_waitpid(-1, 0, NULL) != -ECHILD);
 	return NULL;
 }
 extern void *sunghan_deadlock_test(int, void*);
-static void* my_sunghan_deadlock_test(char** msg){
+static int my_sunghan_deadlock_test(kshell_t* kshell, int argc, char** argv){
 	dbg(DBG_PRINT, "Executing sunghun deadlock test");
-	sunghan_deadlock_test(1, NULL);
+	proc_t *new_sunghan_deadlock_test = proc_create("sunghun_deadlock_test");
+	KASSERT(NULL != new_sunghan_deadlock_test);
+	kthread_t *new_sunghan_deadlock_thr = kthread_create(new_sunghan_deadlock_test, sunghan_deadlock_test, 1, NULL);
+	KASSERT(NULL != new_sunghan_deadlock_thr);
+	dbg(DBG_PRINT, "sunghun_deadlock_test process created with pid %d\n", new_sunghan_deadlock_test->p_pid);
+	sched_make_runnable(new_sunghan_deadlock_thr);
+	while(do_waitpid(-1, 0, NULL) != -ECHILD);
 	return NULL;
 }
 static void *
 initproc_run(int arg1, void *arg2)
 {
-
 	dbg(DBG_PRINT, "Executing init proc run");
-
     /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
 #ifdef __DRIVERS__
-	kshell_add_command("faber_test", my_faber_thread_test, "Run faber_thread_test().");
+	kshell_add_command("faber_test", my_faber_thread_test, "Run faber_thread_test()");
 	kshell_add_command("sunghan_test", my_sunghan_test, "Run sunghan_test().");
 	kshell_add_command("sunghan_deadlock", my_sunghan_deadlock_test, "Run sunghan_deadlock_test().");
     kshell_t *kshell = kshell_create(0);
     if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
     while (kshell_execute_next(kshell));
     kshell_destroy(kshell);
-#endif
-
-#ifndef __DRIVERS__
-
-	/*creating a process for sunghan test*/
-
-	proc_t *new_proc = proc_create("sunghun_test");
-	kthread_t *new_thr = kthread_create(new_proc, sunghan_test, 1, NULL);
-	dbg(DBG_PRINT, "sunghun_test process created with pid %d\n", new_proc->p_pid);
-	sched_make_runnable(new_thr);
-
-	/*creating proc for faber test*/
-
-	proc_t* new_proc2 = proc_create("faber_test");
-	KASSERT(NULL != new_proc2);
-	kthread_t *new_thr2 = kthread_create(new_proc2, faber_thread_test, 1, NULL);
-	KASSERT(NULL != new_thr2);
-	dbg(DBG_PRINT, "faber_test process created with pid %d\n", new_proc2->p_pid);
-	sched_make_runnable(new_thr2);
-
-	/*create process for sunghan deadlock test*/
-
-	proc_t *new_proc3 = proc_create("sunghun_deadlock_test");
-	kthread_t *new_thr3 = kthread_create(new_proc3, sunghan_deadlock_test, 1, NULL);
-	dbg(DBG_PRINT, "sunghun_deadlock_test process created with pid %d\n", new_proc3->p_pid);
-	sched_make_runnable(new_thr3);
-
+#else
+    my_faber_thread_test(NULL, NULL, NULL);
+    my_sunghan_test(NULL, NULL, NULL);
+    my_sunghan_deadlock_test(NULL, NULL, NULL);
 #endif
 	/* waits for all children to die */
 	while(do_waitpid(-1, 0, NULL) != -ECHILD);
-    return NULL;
+
+    return NULL;	 /*waits for all children to die */
+
 }
