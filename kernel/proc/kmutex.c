@@ -92,7 +92,7 @@ kmutex_lock_cancellable(kmutex_t *mtx)
 	if(mtx->km_holder) {
 		/*ktqueue_enqueue(&(mtx->km_waitq), curthr);*/
 		status = sched_cancellable_sleep_on(&(mtx->km_waitq));
-		sched_switch();
+		/*sched_switch();*/ /* not needed as sched_cancellable_sleep_on is calling sched_swtich*/
 	}
 	else {
 		mtx->km_holder = curthr;
