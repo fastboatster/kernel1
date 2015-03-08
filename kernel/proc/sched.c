@@ -141,7 +141,8 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 	/* enqueue it to the given queue */
 	ktqueue_enqueue(q, curthr);
 	sched_switch();
-        return 0;
+	if(curthr->kt_cancelled) return -EINTR;
+	else return 0;
 }
 
 kthread_t* sched_wakeup_on(ktqueue_t *q)
