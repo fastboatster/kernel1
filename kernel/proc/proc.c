@@ -216,9 +216,9 @@ proc_cleanup(int status)
 	list_iterate_begin(&curproc->p_children, p, proc_t, p_child_link)
 	{
 		KASSERT(NULL != p);
+		list_remove(&p->p_child_link); 	/* removes the child from its parent list using next and prev pointers */
 		list_insert_tail(&(proc_initproc->p_children), &(p->p_child_link));
 		p->p_pproc = proc_initproc;
-		list_remove(&p->p_child_link); 	/* removes the child from its parent list using next and prev pointers */
 	}list_iterate_end();
 
 	curproc->p_status = status; 		/* set the status for the current process, this will be returned to the parent when it calls do_waitpid() */
@@ -259,30 +259,42 @@ proc_kill(proc_t *p, int status)
 	KASSERT(NULL != p); 	/* process should not be NULL */
 	KASSERT(PID_IDLE != p->p_pid && PID_IDLE != p->p_pproc->p_pid);
 
+	if(curproc == p){
+		do_exit(status);
+		return;
+	}
+
 	/* iterate over all the child processes and re-parent them */
 	proc_t* child;
 	list_iterate_begin(&p->p_children, child, proc_t, p_child_link)
 	{
 		KASSERT(NULL != child);
-		list_insert_tail(&(proc_initproc->p_children), &(p->p_child_link));
-		child->p_pproc = proc_initproc;
 		list_remove(&child->p_child_link); /* removes the child from its list using its next and prev pointers */
+		list_insert_tail(&(proc_initproc->p_children), &(child->p_child_link));
+		child->p_pproc = proc_initproc;
 	}list_iterate_end();
 
 	/* iterate over threads and cancel them */
 	kthread_t *thr;
+	int is_any_thread_alive = 0;
 	list_iterate_begin(&p->p_threads, thr, kthread_t, kt_plink)
 	{
 		KASSERT(NULL != thr);
 		if(KT_SLEEP == thr->kt_state || KT_SLEEP_CANCELLABLE == thr->kt_state) {
+			is_any_thread_alive = 1;
 			thr->kt_cancelled = 1;
 			sched_wakeup_on(thr->kt_wchan);
-		}else { /* curthr */
-			do_exit(status);
 		}
 		/* this thread need not be removed from the thread list now. it can be handled in the do_waitpid */
 	}list_iterate_end();
 
+	if(!is_any_thread_alive) {
+		dbg(DBG_PRINT, "Killing  process %d, Parent PID : %d\n", p->p_pid, p->p_pproc->p_pid);
+		p->p_status = status; 		/* set the status for the current process, this will be returned to the parent when it calls do_waitpid() */
+		p->p_state = PROC_DEAD; 		/* mark the process is DEAD */
+		KASSERT(NULL != &(p->p_pproc->p_wait));
+		sched_wakeup_on(&(p->p_pproc->p_wait)); /* wake up the parent process it may wait for the child to die */
+	}
 	/*
 	p->p_status = status; 	 //set the status for the process
 	p->p_state = PROC_DEAD;  //set the state for the process
@@ -305,11 +317,20 @@ proc_kill_all()
 	proc_t* child;
 	list_iterate_begin(&_proc_list, child, proc_t, p_list_link)
 	{
+
 		KASSERT(NULL != child);
+
 		/* kill all the process except IDLE and direct children of IDLE */
-		if (curproc != child && PID_IDLE != child->p_pid && PID_IDLE != child->p_pproc->p_pid)
+		if (curproc != child && PID_IDLE != child->p_pid && PID_IDLE != child->p_pproc->p_pid) {
+			dbg(DBG_PRINT, "Killing the child process ..%d\n", child->p_pid);
 			proc_kill(child, child->p_status);
+		}
 	}list_iterate_end();
+
+	if(PID_IDLE != curproc->p_pproc->p_pid) {
+	dbg(DBG_PRINT, "Killing the current process ..%d, %d\n", curproc->p_pid, curthr->kt_state);
+	proc_kill(curproc, curproc->p_status);
+	}
 }
 
 /*
