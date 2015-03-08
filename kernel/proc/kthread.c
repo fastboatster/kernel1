@@ -79,12 +79,16 @@ free_stack(char *stack)
 void
 kthread_destroy(kthread_t *t)
 {
-        KASSERT(t && t->kt_kstack);
-        free_stack(t->kt_kstack);
-        if (list_link_is_linked(&t->kt_plink))
+		/*
+		 * Free up all the space used for kthread
+		 */
+        KASSERT(NULL != t);
+        KASSERT(NULL != t->kt_kstack);
+        free_stack(t->kt_kstack);			   /* free up the stack */
+        if (list_link_is_linked(&t->kt_plink)) /* remove the link on proc thread list */
                 list_remove(&t->kt_plink);
-
-        slab_obj_free(kthread_allocator, t);
+        KASSERT(NULL != kthread_allocator);
+        slab_obj_free(kthread_allocator, t);	/* free up the thread space */
 }
 
 /*
@@ -98,8 +102,30 @@ kthread_destroy(kthread_t *t)
 kthread_t *
 kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_create");
-        return NULL;
+	kthread_t *new_thr = (kthread_t*)slab_obj_alloc(kthread_allocator);
+	KASSERT(new_thr);
+	/* allocate the new stack: */
+	new_thr->kt_kstack = alloc_stack();
+	KASSERT(new_thr->kt_kstack);
+	/* set other data fields */
+	new_thr->kt_proc = p; /* set the parent process to the process passed to the function */
+	new_thr->kt_retval = NULL;
+	new_thr->kt_errno = NULL;
+	new_thr->kt_cancelled = 0;
+	new_thr->kt_state  = KT_RUN; /* make it runnable */
+	/*initialize pointer to kt_wchan to NULL:*/
+	new_thr->kt_wchan = NULL;
+	/* setup context, very gross looking */
+	context_setup(&(new_thr->kt_ctx), func, arg1, arg2, new_thr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
+	/* insert the thread into the list of all the threads in the process p:*/
+	list_link_init(&(new_thr->kt_plink)); /* init the link in the new_thr */
+	list_link_init(&(new_thr->kt_qlink)); /*init a qlink*/
+	list_insert_tail(&(p->p_threads), &(new_thr->kt_plink)); /* into the p_children list in process p */
+
+	/*NOT_YET_IMPLEMENTED("PROCS: kthread_create");
+    return NULL;
+    */
+	return new_thr;
 }
 
 /*
@@ -116,7 +142,23 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");
+    /* NOT_YET_IMPLEMENTED("PROCS: kthread_cancel"); */
+	/* if this is current thread, do kthread_exit:*/
+	KASSERT(NULL != kthr);
+	if(kthr == curthr) {
+		kthread_exit(retval);
+		return;
+	};
+	/*if this is a sleeping thread, then:*/
+	/* set return value and cancelled status: */
+	kthr->kt_retval = retval;
+	kthr->kt_cancelled = 1;
+	/*if the thread is in cancellable sleep state, wake it up:*/
+	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
+		sched_wakeup_on((kthr->kt_wchan));
+		/*sched_cancel(kthr);*/
+	}
+	/*if it just sleeps, do nothing else*/
 }
 
 /*
@@ -132,7 +174,12 @@ kthread_cancel(kthread_t *kthr, void *retval)
 void
 kthread_exit(void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_exit");
+		dbg(DBG_PRINT, "\nkthread_exit()\n");
+		/* Looks like kthread_exit is called implicitly whenever a thread returns by invoking "return"*/
+		/* NOT_YET_IMPLEMENTED("PROCS: kthread_exit"); */
+		curthr->kt_retval = retval;
+		curthr->kt_state = KT_EXITED;
+		proc_thread_exited(retval); /* this notifies the process so that it can handle the respective clean up */
 }
 
 /*

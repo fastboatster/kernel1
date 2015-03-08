@@ -113,7 +113,11 @@ sched_queue_empty(ktqueue_t *q)
 void
 sched_sleep_on(ktqueue_t *q)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");
+	dbg(DBG_PRINT, "\nsched_sleep_on\n");
+     /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
+	curthr->kt_state = KT_SLEEP;
+	ktqueue_enqueue(q, curthr);
+	sched_switch();
 }
 
 
@@ -127,21 +131,57 @@ sched_sleep_on(ktqueue_t *q)
 int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");
-        return 0;
+    /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on"); */
+	int is_canc = curthr->kt_cancelled;
+	if(is_canc) {
+		return -EINTR;
+	};
+	/* set the state of the thread*/
+	curthr->kt_state = KT_SLEEP_CANCELLABLE;
+	/* enqueue it to the given queue */
+	ktqueue_enqueue(q, curthr);
+	sched_switch();
+	if(curthr->kt_cancelled) return -EINTR;
+	else return 0;
 }
 
-kthread_t *
-sched_wakeup_on(ktqueue_t *q)
+kthread_t* sched_wakeup_on(ktqueue_t *q)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");
+	dbg(DBG_PRINT, "\nsched_wakeup_on()\n");
+    /* NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
+	KASSERT(q);
+	kthread_t* newthr;
+	if(sched_queue_empty(q)) {
         return NULL;
+	};
+	/*else dequeue a thread from waiting queue*/
+	newthr = ktqueue_dequeue(q);
+	/*newthr->kt_state = KT_RUN;*/
+	/* remove thread from wait queue*/
+	/*ktqueue_remove(q, newthr); */
+	/*make that thread runnable, i.e. add it to the run queue*/
+	/*if(KT_SLEEP == newthr->kt_state || KT_SLEEP_CANCELLABLE == newthr->kt_state)*/
+	sched_make_runnable(newthr);
+	return newthr;
 }
 
-void
-sched_broadcast_on(ktqueue_t *q)
+void sched_broadcast_on(ktqueue_t *q)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on");
+       /* NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on"); */
+	KASSERT(q);
+	kthread_t* newthr;
+	if(sched_queue_empty(q)) {
+	        return;
+	};
+	while(!sched_queue_empty(q)) {
+		newthr = ktqueue_dequeue(q);
+		newthr->kt_state = KT_RUN;
+		/* remove thread from wait queue*/
+		/*ktqueue_remove(q, newthr); */
+		/* add that thread to run queue*/
+		sched_make_runnable(newthr);
+	};
+	return;
 }
 
 /*
@@ -153,10 +193,22 @@ sched_broadcast_on(ktqueue_t *q)
  * state, it should be on some queue. Otherwise, it will never be run
  * again.
  */
-void
-sched_cancel(struct kthread *kthr)
+void sched_cancel(struct kthread *kthr)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_cancel");
+     /* NOT_YET_IMPLEMENTED("PROCS: sched_cancel"); */
+	KASSERT(!(kthr->kt_state==KT_NO_STATE) && !(kthr->kt_state==KT_EXITED));
+	/*get the queue that thread is sleeping on:*/
+	ktqueue_t *wait_q = kthr->kt_wchan;
+
+	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
+		kthr->kt_cancelled = 1;
+		ktqueue_remove(wait_q, kthr);
+		/* add that thread to the run queue*/
+		sched_make_runnable(kthr);
+	}
+	else {
+		kthr->kt_cancelled = 1;
+	}
 }
 
 /*
@@ -195,10 +247,37 @@ sched_cancel(struct kthread *kthr)
  *
  * Note: The IPL is process specific.
  */
-void
-sched_switch(void)
+void sched_switch(void)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_switch");
+	dbg(DBG_PRINT, "\nsched_switch\n");
+     /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
+	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/
+	kthread_t *old_thread;
+	uint8_t old_ipl = intr_getipl(); /*get and save current interrupt level*/
+	intr_setipl(IPL_HIGH);
+
+	while(sched_queue_empty(&kt_runq)) {
+		dbg(DBG_PRINT, "\nWaiting for interrupt. No threads in runQ\n");
+		intr_setipl(IPL_LOW);
+		intr_wait();
+		intr_setipl(IPL_HIGH);
+	};
+
+	/*save current thread to the old_thread: */
+	old_thread = curthr;
+	/* dequeue a thread from run queue:*/
+	curthr = ktqueue_dequeue(&kt_runq);
+	curthr->kt_state = KT_RUN;
+	/*set current process to be current thread's process:*/
+	curproc = curthr->kt_proc;
+	/*switch contexts:*/
+	dbg(DBG_PRINT, "Got the new thread for CPU %d\n", curproc->p_pid);
+	context_switch(&(old_thread->kt_ctx), &(curthr->kt_ctx));
+	/*make current thread context active: */
+	/*context_make_active(&(curthr->kt_ctx)); we need to make the context active only once */
+	/*re-enable interrupts again:*/
+	intr_setipl(old_ipl); /*not sure about this as it might not be defined in the new threads context*/
+	dbg(DBG_PRINT, "\n new thread entered into CPU %d\n", curproc->p_pid);
 }
 
 /*
@@ -217,5 +296,16 @@ sched_switch(void)
 void
 sched_make_runnable(kthread_t *thr)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");
+	dbg(DBG_PRINT, "\nsched_make_runnable()\n");
+    /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
+
+	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/
+	uint8_t old_ipl = intr_getipl(); /*get and save current interrupt level*/
+	intr_setipl(IPL_HIGH);
+	/* set the thread state to runnable:*/
+	thr->kt_state = KT_RUN;
+	/* enqueue the thread to the kt_runq (runnable queue):*/
+	ktqueue_enqueue(&kt_runq, thr);
+	/*set the IPL to old:*/
+	intr_setipl(old_ipl);
 }
