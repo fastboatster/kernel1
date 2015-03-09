@@ -113,7 +113,7 @@ sched_queue_empty(ktqueue_t *q)
 void
 sched_sleep_on(ktqueue_t *q)
 {
-	dbg(DBG_PRINT, "\nsched_sleep_on\n");
+	dbg(DBG_PRINT, "INFO : executing sched_sleep_on\n");
      /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
 	curthr->kt_state = KT_SLEEP;
 	ktqueue_enqueue(q, curthr);
@@ -131,6 +131,7 @@ sched_sleep_on(ktqueue_t *q)
 int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
+	dbg(DBG_PRINT, "INFO : executing sched_cancellable_sleep_on\n");
     /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on"); */
 	int is_canc = curthr->kt_cancelled;
 	if(is_canc) {
@@ -147,7 +148,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 
 kthread_t* sched_wakeup_on(ktqueue_t *q)
 {
-	dbg(DBG_PRINT, "\nsched_wakeup_on()\n");
+	dbg(DBG_PRINT, "INFO : executing sched_wakeup_on\n");
     /* NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
 	KASSERT(q);
 	kthread_t* newthr;
@@ -163,6 +164,7 @@ kthread_t* sched_wakeup_on(ktqueue_t *q)
 	/*if(KT_SLEEP == newthr->kt_state || KT_SLEEP_CANCELLABLE == newthr->kt_state)*/
 	KASSERT((newthr->kt_state == KT_SLEEP) || (newthr->kt_state == KT_SLEEP_CANCELLABLE));
 	dbg(DBG_PRINT, "(GRADING1A 4.a)\n");
+	dbg(DBG_PRINT, "INFO : woken up thread (process ID = %d)\n", newthr->kt_proc->p_pid);
 	sched_make_runnable(newthr);
 	return newthr;
 }
@@ -170,6 +172,7 @@ kthread_t* sched_wakeup_on(ktqueue_t *q)
 void sched_broadcast_on(ktqueue_t *q)
 {
        /* NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on"); */
+	dbg(DBG_PRINT, "INFO : executing sched_broadcast_on\n");
 	KASSERT(q);
 	kthread_t* newthr;
 	if(sched_queue_empty(q)) {
@@ -181,6 +184,7 @@ void sched_broadcast_on(ktqueue_t *q)
 		/* remove thread from wait queue*/
 		/*ktqueue_remove(q, newthr); */
 		/* add that thread to run queue*/
+		dbg(DBG_PRINT, "INFO : woken up thread (process ID = %d)\n", newthr->kt_proc->p_pid);
 		sched_make_runnable(newthr);
 	};
 	return;
@@ -197,12 +201,15 @@ void sched_broadcast_on(ktqueue_t *q)
  */
 void sched_cancel(struct kthread *kthr)
 {
+	dbg(DBG_PRINT, "INFO : executing sched_cancel\n");
      /* NOT_YET_IMPLEMENTED("PROCS: sched_cancel"); */
+	dbg(DBG_PRINT, "INFO : sched_cancel on thread(PID = %d)\n", kthr->kt_proc->p_pid);
 	KASSERT(!(kthr->kt_state==KT_NO_STATE) && !(kthr->kt_state==KT_EXITED));
 	/*get the queue that thread is sleeping on:*/
 	ktqueue_t *wait_q = kthr->kt_wchan;
 
 	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
+		dbg(DBG_PRINT, "INFO : thread is in sleep cancellable state. so, it can be canceled and made runnable right away\n");
 		kthr->kt_cancelled = 1;
 		ktqueue_remove(wait_q, kthr);
 		/* add that thread to the run queue*/
@@ -251,7 +258,7 @@ void sched_cancel(struct kthread *kthr)
  */
 void sched_switch(void)
 {
-	dbg(DBG_PRINT, "\nsched_switch\n");
+	dbg(DBG_PRINT, "INFO : executing sched_switch\n");
      /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
 	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/
 	kthread_t *old_thread;
@@ -259,7 +266,7 @@ void sched_switch(void)
 	intr_setipl(IPL_HIGH);
 
 	while(sched_queue_empty(&kt_runq)) {
-		dbg(DBG_PRINT, "\nWaiting for interrupt. No threads in runQ\n");
+		dbg(DBG_PRINT, "INFO : waiting for interrupt. no threads in runQ\n");
 		intr_setipl(IPL_LOW);
 		intr_wait();
 		intr_setipl(IPL_HIGH);
@@ -273,13 +280,12 @@ void sched_switch(void)
 	/*set current process to be current thread's process:*/
 	curproc = curthr->kt_proc;
 	/*switch contexts:*/
-	dbg(DBG_PRINT, "Got the new thread for CPU %d\n", curproc->p_pid);
 	context_switch(&(old_thread->kt_ctx), &(curthr->kt_ctx));
 	/*make current thread context active: */
 	/*context_make_active(&(curthr->kt_ctx)); we need to make the context active only once */
 	/*re-enable interrupts again:*/
 	intr_setipl(old_ipl); /*not sure about this as it might not be defined in the new threads context*/
-	dbg(DBG_PRINT, "\n new thread entered into CPU %d\n", curproc->p_pid);
+	dbg(DBG_PRINT, "INFO : got the new thread for CPU %d\n", curproc->p_pid);
 }
 
 /*
@@ -298,7 +304,7 @@ void sched_switch(void)
 void
 sched_make_runnable(kthread_t *thr)
 {
-	dbg(DBG_PRINT, "\nsched_make_runnable()\n");
+	dbg(DBG_PRINT, "INFO : executing sched_make_runnable\n");
 	KASSERT(&kt_runq != thr->kt_wchan); /* make sure thread is not already in the runq */
 	dbg(DBG_PRINT, "(GRADING1A 4.b)\n");
     /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
