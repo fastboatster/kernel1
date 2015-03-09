@@ -109,6 +109,8 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	KASSERT(new_thr->kt_kstack);
 	/* set other data fields */
 	new_thr->kt_proc = p; /* set the parent process to the process passed to the function */
+	KASSERT(NULL != p);
+	dbg(DBG_PRINT, "(GRADING1A 3.a)\n");
 	new_thr->kt_retval = NULL;
 	new_thr->kt_errno = NULL;
 	new_thr->kt_cancelled = 0;
@@ -145,6 +147,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
     /* NOT_YET_IMPLEMENTED("PROCS: kthread_cancel"); */
 	/* if this is current thread, do kthread_exit:*/
 	KASSERT(NULL != kthr);
+	dbg(DBG_PRINT, "(GRADING1A 3.b)\n");
 	if(kthr == curthr) {
 		kthread_exit(retval);
 		return;
