@@ -161,6 +161,8 @@ kthread_t* sched_wakeup_on(ktqueue_t *q)
 	/*ktqueue_remove(q, newthr); */
 	/*make that thread runnable, i.e. add it to the run queue*/
 	/*if(KT_SLEEP == newthr->kt_state || KT_SLEEP_CANCELLABLE == newthr->kt_state)*/
+	KASSERT((newthr->kt_state == KT_SLEEP) || (newthr->kt_state == KT_SLEEP_CANCELLABLE));
+	dbg(DBG_PRINT, "(GRADING1A 4.a)\n");
 	sched_make_runnable(newthr);
 	return newthr;
 }
@@ -297,6 +299,8 @@ void
 sched_make_runnable(kthread_t *thr)
 {
 	dbg(DBG_PRINT, "\nsched_make_runnable()\n");
+	KASSERT(&kt_runq != thr->kt_wchan); /* make sure thread is not already in the runq */
+	dbg(DBG_PRINT, "(GRADING1A 4.b)\n");
     /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
 
 	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/

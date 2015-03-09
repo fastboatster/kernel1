@@ -71,6 +71,8 @@ kmutex_init(kmutex_t *mtx)
 void
 kmutex_lock(kmutex_t *mtx) {
      /* NOT_YET_IMPLEMENTED("PROCS: kmutex_lock"); */
+	KASSERT(curthr && (curthr != mtx->km_holder)); /*curthe is not already mutex holder*/
+	dbg(DBG_PRINT, "(GRADING1A 5.a)\n");
 	if(mtx->km_holder) {
 		ktqueue_enqueue(&(mtx->km_waitq), curthr);
 		sched_switch();
@@ -88,6 +90,8 @@ int
 kmutex_lock_cancellable(kmutex_t *mtx)
 {
        /* NOT_YET_IMPLEMENTED("PROCS: kmutex_lock_cancellable"); */
+	KASSERT(curthr && (curthr != mtx->km_holder)); /*making sure curthr is not current mutex holder*/
+	dbg(DBG_PRINT, "(GRADING1A 5.b)\n");
 	int status =0;
 	if(mtx->km_holder) {
 		/*ktqueue_enqueue(&(mtx->km_waitq), curthr);*/
@@ -118,6 +122,8 @@ void
 kmutex_unlock(kmutex_t *mtx)
 {
        /* NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock"); */
+	 KASSERT(curthr && (curthr == mtx->km_holder)); /*make sure curthr is a mutex holder*/
+	 dbg(DBG_PRINT, "(GRADING1A 5.c)\n");
 	if	(sched_queue_empty(&(mtx->km_waitq)))
 		mtx->km_holder = NULL;
 	else
@@ -127,4 +133,6 @@ kmutex_unlock(kmutex_t *mtx)
 		mtx->km_holder = new_thr; /*update a pointer to current mutex holder*/
 		sched_make_runnable(new_thr);
 	};
+	KASSERT(curthr != mtx->km_holder);
+	dbg(DBG_PRINT, "(GRADING1A 5.c)\n");
 }

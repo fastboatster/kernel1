@@ -186,10 +186,18 @@ bootstrap(int arg1, void *arg2)
         KASSERT(PID_IDLE == idle_proc->p_pid); /* newly create process PID should match with IDLE_PID since its the first process that got created */
         kthread_t* idle_thr = kthread_create(idle_proc, idleproc_run, NULL, NULL);
         KASSERT(NULL != idle_thr);
+       /* dbg(DBG_PRINT, "(GRADING1A 1.a)\n");dbg call for idleproc thread creation*/
         curproc = idle_proc; /* set current process */
+        KASSERT(NULL != curproc);
+        dbg(DBG_PRINT, "(GRADING1A 1.a)\n"); /*dbg call for successful idleproc creation*/
         curthr = idle_thr; /* set current thread */
+        KASSERT(NULL != curthr);
+        dbg(DBG_PRINT, "(GRADING1A 1.a)\n");
         KASSERT(NULL != &(idle_thr->kt_ctx));
         context_make_active(&(idle_thr->kt_ctx)); /* to make idle execute right away */
+
+        KASSERT(PID_IDLE == curproc->p_pid);
+        dbg(DBG_PRINT, "(GRADING1A 1.a)\n");
 
         /* NOT_YET_IMPLEMENTED("PROCS: bootstrap"); */
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
@@ -290,9 +298,12 @@ initproc_create(void)
 	 */
 	        proc_t *init_proc=proc_create("Init");
 	        KASSERT(NULL != init_proc);		/*Asserting that init_proc is not null*/
+	        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
 	        KASSERT(init_proc->p_pid == PID_INIT); /* init_proc should have pid 1*/
+	        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
 	        kthread_t *init_thr=kthread_create(init_proc,initproc_run,NULL,NULL);
 	        KASSERT(NULL != init_thr);
+	        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
 	        return init_thr;
 }
 

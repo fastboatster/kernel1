@@ -102,6 +102,8 @@ kthread_destroy(kthread_t *t)
 kthread_t *
 kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
+	KASSERT(NULL != p);
+	dbg(DBG_PRINT, "(GRADING1A 3.a)\n");
 	kthread_t *new_thr = (kthread_t*)slab_obj_alloc(kthread_allocator);
 	KASSERT(new_thr);
 	/* allocate the new stack: */
@@ -145,6 +147,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
     /* NOT_YET_IMPLEMENTED("PROCS: kthread_cancel"); */
 	/* if this is current thread, do kthread_exit:*/
 	KASSERT(NULL != kthr);
+	dbg(DBG_PRINT, "(GRADING1A 3.b)\n");
 	if(kthr == curthr) {
 		kthread_exit(retval);
 		return;
@@ -174,7 +177,14 @@ kthread_cancel(kthread_t *kthr, void *retval)
 void
 kthread_exit(void *retval)
 {
-		dbg(DBG_PRINT, "\nkthread_exit()\n");
+	dbg(DBG_PRINT, "\nkthread_exit()\n");
+	KASSERT(!curthr->kt_wchan); /* curthr should not be in any queue */
+	dbg(DBG_PRINT, "(GRADING1A 3.c)\n");
+	KASSERT(!curthr->kt_qlink.l_next && !curthr->kt_qlink.l_prev); /* queue should be empty */
+	dbg(DBG_PRINT, "(GRADING1A 3.c)\n");
+	KASSERT(curthr->kt_proc == curproc);
+	dbg(DBG_PRINT, "(GRADING1A 3.c)\n");
+
 		/* Looks like kthread_exit is called implicitly whenever a thread returns by invoking "return"*/
 		/* NOT_YET_IMPLEMENTED("PROCS: kthread_exit"); */
 		curthr->kt_retval = retval;
