@@ -314,7 +314,7 @@ proc_kill(proc_t *p, int status)
 		p->p_status = status; 		/* set the status for the current process, this will be returned to the parent when it calls do_waitpid() */
 		p->p_state = PROC_DEAD; 		/* mark the process is DEAD */
 		KASSERT(NULL != &(p->p_pproc->p_wait));
-		dbg(DBG_PRINT, "INFO : waking of the parent %d of process %d\n", p->p_pproc->p_pid, p->p_pid);
+		dbg(DBG_PRINT, "INFO : waking up the parent %d of process %d\n", p->p_pproc->p_pid, p->p_pid);
 		sched_wakeup_on(&(p->p_pproc->p_wait)); /* wake up the parent process it may wait for the child to die */
 	}
 	/*
