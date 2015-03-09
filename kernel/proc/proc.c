@@ -290,10 +290,14 @@ proc_kill(proc_t *p, int status)
 	list_iterate_begin(&p->p_threads, thr, kthread_t, kt_plink)
 	{
 		KASSERT(NULL != thr);
-		if(KT_SLEEP == thr->kt_state || KT_SLEEP_CANCELLABLE == thr->kt_state) {
+		/*if(KT_SLEEP == thr->kt_state || KT_SLEEP_CANCELLABLE == thr->kt_state) {
 			is_any_thread_alive = 1;
 			thr->kt_cancelled = 1;
 			sched_wakeup_on(thr->kt_wchan);
+		}*/
+		if(KT_EXITED != thr->kt_state || KT_NO_STATE != thr->kt_state){ /* thread is in waitQ or runQ */
+			is_any_thread_alive = 1;
+			kthread_cancel(thr, (void*)-1);
 		}
 		/* this thread need not be removed from the thread list now. it can be handled in the do_waitpid */
 	}list_iterate_end();
