@@ -79,6 +79,7 @@ free_stack(char *stack)
 void
 kthread_destroy(kthread_t *t)
 {
+	dbg(DBG_PRINT, "INFO : executing kthread_destroy\n");
 		/*
 		 * Free up all the space used for kthread
 		 */
@@ -102,8 +103,10 @@ kthread_destroy(kthread_t *t)
 kthread_t *
 kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
+	dbg(DBG_PRINT, "INFO : executing kthread_create\n");
 	KASSERT(NULL != p);
 	dbg(DBG_PRINT, "(GRADING1A 3.a)\n");
+	dbg(DBG_PRINT, "INFO : creating a thread for process %d\n", p->p_pid);
 	kthread_t *new_thr = (kthread_t*)slab_obj_alloc(kthread_allocator);
 	KASSERT(new_thr);
 	/* allocate the new stack: */
@@ -144,10 +147,12 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
+	dbg(DBG_PRINT, "INFO : executing kthread_cancel\n");
     /* NOT_YET_IMPLEMENTED("PROCS: kthread_cancel"); */
 	/* if this is current thread, do kthread_exit:*/
 	KASSERT(NULL != kthr);
 	dbg(DBG_PRINT, "(GRADING1A 3.b)\n");
+	dbg(DBG_PRINT, "INFO : canceling thread of process %d\n", kthr->kt_proc->p_pid);
 	if(kthr == curthr) {
 		kthread_exit(retval);
 		return;
@@ -177,7 +182,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
 void
 kthread_exit(void *retval)
 {
-	dbg(DBG_PRINT, "\nkthread_exit()\n");
+	dbg(DBG_PRINT, "INFO : executing kthread_exit\n");
 	KASSERT(!curthr->kt_wchan); /* curthr should not be in any queue */
 	dbg(DBG_PRINT, "(GRADING1A 3.c)\n");
 	KASSERT(!curthr->kt_qlink.l_next && !curthr->kt_qlink.l_prev); /* queue should be empty */
