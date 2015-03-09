@@ -102,6 +102,8 @@ kthread_destroy(kthread_t *t)
 kthread_t *
 kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
+	KASSERT(NULL != p);
+	dbg(DBG_PRINT, "(GRADING1A 3.a)\n");
 	kthread_t *new_thr = (kthread_t*)slab_obj_alloc(kthread_allocator);
 	KASSERT(new_thr);
 	/* allocate the new stack: */
@@ -109,8 +111,6 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	KASSERT(new_thr->kt_kstack);
 	/* set other data fields */
 	new_thr->kt_proc = p; /* set the parent process to the process passed to the function */
-	KASSERT(NULL != p);
-	dbg(DBG_PRINT, "(GRADING1A 3.a)\n");
 	new_thr->kt_retval = NULL;
 	new_thr->kt_errno = NULL;
 	new_thr->kt_cancelled = 0;
