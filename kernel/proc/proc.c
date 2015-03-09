@@ -119,7 +119,9 @@ proc_create(char *name)
 
 	int pid = _proc_getid();
 	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); 	/* pid can only be PID_IDLE if this is the first process */
+	dbg(DBG_PRINT, "(GRADING1A 2.a)\n");
 	KASSERT(PID_INIT != pid || PID_IDLE == curproc->p_pid); /* pid can only be PID_INIT when creating from idle process */
+	dbg(DBG_PRINT, "(GRADING1A 2.a)\n");
 
 	/* create new process */
 	proc_t* new_proc = slab_obj_alloc(proc_allocator);
@@ -207,8 +209,13 @@ proc_cleanup(int status)
 
 	/* NOT_YET_IMPLEMENTED("PROCS: proc_cleanup"); */
 
+	KASSERT(NULL != proc_initproc); /* init process cannot be NULL, we need to reparent child processes */
+	dbg(DBG_PRINT, "(GRADING1A 2.b)\n");
 	KASSERT(NULL != curproc); 	/* when cleanup is called, curproc cannot be NULL*/
-	KASSERT(PID_IDLE != curproc->p_pid);
+	KASSERT(1 <= curproc->p_pid); /* this process should not be idle process, process cannot be idle process, == KASSERT(PID_IDLE != curproc->p_pid); */
+	dbg(DBG_PRINT, "(GRADING1A 2.b)\n");
+	KASSERT(NULL != curproc->p_pproc); /* this process should have parent process */
+	dbg(DBG_PRINT, "(GRADING1A 2.b)\n");
 
 	dbg(DBG_PRINT, "Current PID : %d, Parent PID : %d\n", curproc->p_pid, curproc->p_pproc->p_pid);
 	/* iterate over all the child processes */
@@ -225,6 +232,9 @@ proc_cleanup(int status)
 	curproc->p_state = PROC_DEAD; 		/* mark the process is DEAD */
 	KASSERT(NULL != &(curproc->p_pproc->p_wait));
 	sched_wakeup_on(&(curproc->p_pproc->p_wait)); /* wake up the parent process it may wait for the child to die */
+
+	KASSERT(NULL != curproc->p_pproc); /* this process should have parent process */
+	dbg(DBG_PRINT, "(GRADING1A 2.b)\n");
 }
 
 /*
@@ -365,6 +375,7 @@ void proc_cleanup_memory(proc_t* dead_proc) {
 	kthread_t* thr;
 	list_iterate_begin(&(dead_proc->p_threads), thr, kthread_t, kt_plink) {
 		KASSERT(KT_EXITED == thr->kt_state);
+		dbg(DBG_PRINT, "(GRADING1A 2.c)\n");
 		kthread_destroy(thr);
 	}list_iterate_end();
 
@@ -373,9 +384,10 @@ void proc_cleanup_memory(proc_t* dead_proc) {
 		list_remove(&dead_proc->p_list_link); 	/* remove child from the global list */
 	if (list_link_is_linked(&dead_proc->p_child_link))
 		list_remove(&dead_proc->p_child_link); /* remove child from parents(curproc) child list */
-	KASSERT(NULL != dead_proc->p_pagedir);
+	KASSERT(NULL != dead_proc->p_pagedir);  /* this process should have a valid pagedir */
+	dbg(DBG_PRINT, "(GRADING1A 2.c)\n");
 	pt_destroy_pagedir(dead_proc->p_pagedir); /* destroy the page directory of the process */
-	KASSERT(NULL != proc_allocator);
+	KASSERT(NULL != proc_allocator); /* there should be a valid proc allocator */
 	slab_obj_free(proc_allocator, dead_proc); /* free up the space allocated for this dead process */
 }
 
@@ -452,9 +464,13 @@ do_waitpid(pid_t pid, int options, int *status)
 		dbg(DBG_PRINT, "\nGot the signal from one of its child while waiting for PID : %d, Current proc PID : %d\n", pid, curproc->p_pid);
 		goto wait_pid;
 	} else { /* found_dead_child ==  1*/
-		KASSERT(NULL != dead_child);
-		if(status) *status = dead_child->p_status;
+		KASSERT(NULL != dead_child);  /* the dead child process should not be NULL */
+		dbg(DBG_PRINT, "(GRADING1A 2.c)\n");
 		pid_t dead_child_pid = dead_child->p_pid;
+		KASSERT(-1 == dead_child_pid || dead_child->p_pid == dead_child_pid); /* should be able to find a valid process ID for the process */
+		dbg(DBG_PRINT, "(GRADING1A 2.c)\n");
+		if(status) *status = dead_child->p_status;
+
 		proc_cleanup_memory(dead_child);
 		return dead_child_pid;
 	}
