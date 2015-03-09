@@ -297,7 +297,7 @@ proc_kill(proc_t *p, int status)
 		}*/
 		if(KT_EXITED != thr->kt_state || KT_NO_STATE != thr->kt_state){ /* thread is in waitQ or runQ */
 			is_any_thread_alive = 1;
-			kthread_cancel(thr, (void*)-1);
+			kthread_cancel(thr, (void*)-1); /* cancel the thread */
 		}
 		/* this thread need not be removed from the thread list now. it can be handled in the do_waitpid */
 	}list_iterate_end();
