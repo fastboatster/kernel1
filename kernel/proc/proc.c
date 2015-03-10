@@ -230,6 +230,7 @@ proc_cleanup(int status)
 	list_iterate_begin(&curproc->p_children, p, proc_t, p_child_link)
 	{
 		KASSERT(NULL != p);
+		dbg(DBG_PRINT, "INFO : reparenting child %d to INIT\n", p->p_pid);
 		list_remove(&p->p_child_link); 	/* removes the child from its parent list using next and prev pointers */
 		list_insert_tail(&(proc_initproc->p_children), &(p->p_child_link));
 		p->p_pproc = proc_initproc;
@@ -291,6 +292,7 @@ proc_kill(proc_t *p, int status)
 	list_iterate_begin(&p->p_children, child, proc_t, p_child_link)
 	{
 		KASSERT(NULL != child);
+		dbg(DBG_PRINT, "INFO : reparenting child %d to INIT\n", child->p_pid);
 		list_remove(&child->p_child_link); /* removes the child from its list using its next and prev pointers */
 		list_insert_tail(&(proc_initproc->p_children), &(child->p_child_link));
 		child->p_pproc = proc_initproc;
@@ -474,7 +476,7 @@ do_waitpid(pid_t pid, int options, int *status)
 		dbg(DBG_PRINT, "(GRADING1A 2.c)\n");
 		pid_t dead_child_pid = dead_child->p_pid;
 		KASSERT(-1 == dead_child_pid || dead_child->p_pid == dead_child_pid); /* should be able to find a valid process ID for the process */
-		dbg(DBG_PRINT, "INFO : found dead child %d\n", dead_child_pid);
+		dbg(DBG_PRINT, "INFO : found dead child %d, parent pid = %d\n", dead_child_pid,curproc->p_pid);
 		dbg(DBG_PRINT, "(GRADING1A 2.c)\n");
 		if(status) { dbg(DBG_PRINT, "(GRADING1A)\n");
 			*status = dead_child->p_status;
