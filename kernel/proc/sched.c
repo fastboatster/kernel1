@@ -142,8 +142,12 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 	/* enqueue it to the given queue */
 	ktqueue_enqueue(q, curthr);
 	sched_switch();
-	if(curthr->kt_cancelled) return -EINTR;
-	else return 0;
+	if(curthr->kt_cancelled) {
+		return -EINTR;
+	}
+	else {
+		return 0;
+	}
 }
 
 kthread_t* sched_wakeup_on(ktqueue_t *q)
@@ -175,7 +179,7 @@ void sched_broadcast_on(ktqueue_t *q)
 	dbg(DBG_PRINT, "INFO : executing sched_broadcast_on\n");
 	KASSERT(q);
 	kthread_t* newthr;
-	if(sched_queue_empty(q)) {
+	if(sched_queue_empty(q)) { dbg(DBG_PRINT, "(GRADING1A)\n"); /*first called by pageoutd*/
 	        return;
 	};
 	while(!sched_queue_empty(q)) {
