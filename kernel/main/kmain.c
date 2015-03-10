@@ -176,7 +176,7 @@ bootstrap(int arg1, void *arg2)
 	 * PID = 1; init_proc
 	 * PID = 2; pageoutd
 	 */
-		dbg_print("\nBootstrap Execution\n");
+		dbg_print("INFO : executing bootstrap\n");
         /* necessary to finalize page table information */
         pt_template_init();
 
@@ -186,10 +186,20 @@ bootstrap(int arg1, void *arg2)
         KASSERT(PID_IDLE == idle_proc->p_pid); /* newly create process PID should match with IDLE_PID since its the first process that got created */
         kthread_t* idle_thr = kthread_create(idle_proc, idleproc_run, NULL, NULL);
         KASSERT(NULL != idle_thr);
+       /* dbg(DBG_PRINT, "(GRADING1A 1.a)\n");dbg call for idleproc thread creation*/
         curproc = idle_proc; /* set current process */
+        KASSERT(NULL != curproc);
+        dbg(DBG_PRINT, "(GRADING1A 1.a)\n"); /*dbg call for successful idleproc creation*/
+        dbg(DBG_PRINT, "INFO : Idle process created \n");
         curthr = idle_thr; /* set current thread */
+        KASSERT(NULL != curthr);
+        dbg(DBG_PRINT, "(GRADING1A 1.a)\n");
+        dbg(DBG_PRINT, "INFO : Idle thread created \n");
         KASSERT(NULL != &(idle_thr->kt_ctx));
         context_make_active(&(idle_thr->kt_ctx)); /* to make idle execute right away */
+
+        KASSERT(PID_IDLE == curproc->p_pid);
+        dbg(DBG_PRINT, "(GRADING1A 1.a)\n");
 
         /* NOT_YET_IMPLEMENTED("PROCS: bootstrap"); */
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
@@ -288,11 +298,17 @@ initproc_create(void)
 	/* NOT_YET_IMPLEMENTED("PROCS: initproc_create");
 	 * return NULL;
 	 */
+			dbg(DBG_PRINT, "INFO : executing initproc_create \n");
 	        proc_t *init_proc=proc_create("Init");
 	        KASSERT(NULL != init_proc);		/*Asserting that init_proc is not null*/
+	        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
 	        KASSERT(init_proc->p_pid == PID_INIT); /* init_proc should have pid 1*/
+	        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
+	        dbg(DBG_PRINT, "INFO : Init process created \n");
 	        kthread_t *init_thr=kthread_create(init_proc,initproc_run,NULL,NULL);
 	        KASSERT(NULL != init_thr);
+	        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
+	        dbg(DBG_PRINT, "INFO : Init thread created \n");
 	        return init_thr;
 }
 
@@ -309,7 +325,7 @@ initproc_create(void)
  */
 extern void *faber_thread_test(int, void*);
 static int my_faber_thread_test(kshell_t* kshell, int argc, char** argv) {
-	dbg(DBG_PRINT, "Executing faber_thread_test");
+	dbg(DBG_PRINT, "INFO : executing faber_thread_test\n");
 	proc_t* new_faber_proc = proc_create("faber_test");
 	KASSERT(NULL != new_faber_proc);
 	kthread_t *new_faber_thr = kthread_create(new_faber_proc, faber_thread_test, 1, NULL);
@@ -321,8 +337,8 @@ static int my_faber_thread_test(kshell_t* kshell, int argc, char** argv) {
 }
 extern void *sunghan_test(int, void*);
 static int my_sunghan_test(kshell_t* kshell, int argc, char** argv){
-	dbg(DBG_PRINT, "Executing sunghun test");
-	proc_t *new_sunghan_test = proc_create("sunghun_test");
+	dbg(DBG_PRINT, "INFO: executing sunghan test\n");
+	proc_t *new_sunghan_test = proc_create("sunghan_test");
 	KASSERT(NULL != new_sunghan_test);
 	kthread_t *new_sunghan_thr = kthread_create(new_sunghan_test, sunghan_test, 1, NULL);
 	KASSERT(NULL != new_sunghan_thr);
@@ -333,8 +349,8 @@ static int my_sunghan_test(kshell_t* kshell, int argc, char** argv){
 }
 extern void *sunghan_deadlock_test(int, void*);
 static int my_sunghan_deadlock_test(kshell_t* kshell, int argc, char** argv){
-	dbg(DBG_PRINT, "Executing sunghun deadlock test");
-	proc_t *new_sunghan_deadlock_test = proc_create("sunghun_deadlock_test");
+	dbg(DBG_PRINT, "INFO : executing sunghan deadlock test\n");
+	proc_t *new_sunghan_deadlock_test = proc_create("sunghan_deadlock_test");
 	KASSERT(NULL != new_sunghan_deadlock_test);
 	kthread_t *new_sunghan_deadlock_thr = kthread_create(new_sunghan_deadlock_test, sunghan_deadlock_test, 1, NULL);
 	KASSERT(NULL != new_sunghan_deadlock_thr);
@@ -346,7 +362,7 @@ static int my_sunghan_deadlock_test(kshell_t* kshell, int argc, char** argv){
 static void *
 initproc_run(int arg1, void *arg2)
 {
-	dbg(DBG_PRINT, "Executing init proc run");
+	dbg(DBG_PRINT, "INFO : executing initproc_run\n");
     /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
 #ifdef __DRIVERS__
 	kshell_add_command("faber_test", my_faber_thread_test, "Run faber_thread_test()");
@@ -357,9 +373,9 @@ initproc_run(int arg1, void *arg2)
     while (kshell_execute_next(kshell));
     kshell_destroy(kshell);
 #else
-    my_faber_thread_test(NULL, NULL, NULL);
+    /*my_faber_thread_test(NULL, NULL, NULL);
     my_sunghan_test(NULL, NULL, NULL);
-    my_sunghan_deadlock_test(NULL, NULL, NULL);
+    my_sunghan_deadlock_test(NULL, NULL, NULL);*/
 #endif
 	/* waits for all children to die */
 	while(do_waitpid(-1, 0, NULL) != -ECHILD);
