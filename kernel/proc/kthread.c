@@ -86,8 +86,9 @@ kthread_destroy(kthread_t *t)
         KASSERT(NULL != t);
         KASSERT(NULL != t->kt_kstack);
         free_stack(t->kt_kstack);			   /* free up the stack */
-        if (list_link_is_linked(&t->kt_plink)) /* remove the link on proc thread list */
+        if (list_link_is_linked(&t->kt_plink)) {dbg(DBG_PRINT, "(GRADING1A)\n"); /* remove the link on proc thread list */
                 list_remove(&t->kt_plink);
+        }
         KASSERT(NULL != kthread_allocator);
         slab_obj_free(kthread_allocator, t);	/* free up the thread space */
 }
