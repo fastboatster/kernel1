@@ -176,7 +176,7 @@ bootstrap(int arg1, void *arg2)
 	 * PID = 1; init_proc
 	 * PID = 2; pageoutd
 	 */
-		dbg_print("INFO : executing bootstrap\n");
+		dbg(DBG_PRINT, "INFO : executing bootstrap\n");
         /* necessary to finalize page table information */
         pt_template_init();
 
@@ -373,9 +373,9 @@ initproc_run(int arg1, void *arg2)
     while (kshell_execute_next(kshell));
     kshell_destroy(kshell);
 #else
-    /*my_faber_thread_test(NULL, NULL, NULL);
+    my_faber_thread_test(NULL, NULL, NULL);
     my_sunghan_test(NULL, NULL, NULL);
-    my_sunghan_deadlock_test(NULL, NULL, NULL);*/
+    my_sunghan_deadlock_test(NULL, NULL, NULL);
 #endif
 	/* waits for all children to die */
 	while(do_waitpid(-1, 0, NULL) != -ECHILD);

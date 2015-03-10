@@ -135,6 +135,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
     /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on"); */
 	int is_canc = curthr->kt_cancelled;
 	if(is_canc) {
+		dbg(DBG_PRINT, "(GRADING1C 5)\n");
 		return -EINTR;
 	};
 	/* set the state of the thread*/
@@ -143,9 +144,11 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 	ktqueue_enqueue(q, curthr);
 	sched_switch();
 	if(curthr->kt_cancelled) {
+		dbg(DBG_PRINT, "(GRADING1C 5)\n");
 		return -EINTR;
 	}
 	else {
+		dbg(DBG_PRINT, "(GRADING1A)\n"); /*after creating kshell, it waits for the interrupt and goes to cancellable sleep on */
 		return 0;
 	}
 }
@@ -157,6 +160,7 @@ kthread_t* sched_wakeup_on(ktqueue_t *q)
 	KASSERT(q);
 	kthread_t* newthr;
 	if(sched_queue_empty(q)) {
+		dbg(DBG_PRINT, "(GRADING1C 1)\n");
         return NULL;
 	};
 	/*else dequeue a thread from waiting queue*/
@@ -179,8 +183,9 @@ void sched_broadcast_on(ktqueue_t *q)
 	dbg(DBG_PRINT, "INFO : executing sched_broadcast_on\n");
 	KASSERT(q);
 	kthread_t* newthr;
-	if(sched_queue_empty(q)) { dbg(DBG_PRINT, "(GRADING1A)\n"); /*first called by pageoutd*/
-	        return;
+	if(sched_queue_empty(q)) {
+		dbg(DBG_PRINT, "(GRADING1A)\n"); /*first called by pageoutd*/
+	    return;
 	};
 	while(!sched_queue_empty(q)) {
 		newthr = ktqueue_dequeue(q);
@@ -213,6 +218,7 @@ void sched_cancel(struct kthread *kthr)
 	ktqueue_t *wait_q = kthr->kt_wchan;
 
 	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
+		dbg(DBG_PRINT, "(GRADING1C 5)\n");
 		dbg(DBG_PRINT, "INFO : thread is in sleep cancellable state. so, it can be canceled and made runnable right away\n");
 		kthr->kt_cancelled = 1;
 		ktqueue_remove(wait_q, kthr);
@@ -220,6 +226,7 @@ void sched_cancel(struct kthread *kthr)
 		sched_make_runnable(kthr);
 	}
 	else {
+		dbg(DBG_PRINT, "(GRADING1C 5)\n");
 		kthr->kt_cancelled = 1;
 	}
 }

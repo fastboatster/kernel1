@@ -86,8 +86,9 @@ kthread_destroy(kthread_t *t)
         KASSERT(NULL != t);
         KASSERT(NULL != t->kt_kstack);
         free_stack(t->kt_kstack);			   /* free up the stack */
-        if (list_link_is_linked(&t->kt_plink)) {dbg(DBG_PRINT, "(GRADING1A)\n"); /* remove the link on proc thread list */
-                list_remove(&t->kt_plink);
+        if (list_link_is_linked(&t->kt_plink)) {
+        	dbg(DBG_PRINT, "(GRADING1A)\n"); /* remove the link on proc thread list */
+            list_remove(&t->kt_plink);
         }
         KASSERT(NULL != kthread_allocator);
         slab_obj_free(kthread_allocator, t);	/* free up the thread space */
@@ -155,6 +156,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
 	dbg(DBG_PRINT, "(GRADING1A 3.b)\n");
 	dbg(DBG_PRINT, "INFO : canceling thread of process %d\n", kthr->kt_proc->p_pid);
 	if(kthr == curthr) {
+		dbg(DBG_PRINT, "(GRADING1C 9)\n");
 		kthread_exit(retval);
 		return;
 	};
@@ -164,6 +166,7 @@ kthread_cancel(kthread_t *kthr, void *retval)
 	kthr->kt_cancelled = 1;
 	/*if the thread is in cancellable sleep state, wake it up:*/
 	if(kthr->kt_state == KT_SLEEP_CANCELLABLE) {
+		dbg(DBG_PRINT, "(GRADING1C 8)\n");
 		sched_wakeup_on((kthr->kt_wchan));
 		/*sched_cancel(kthr);*/
 	}
