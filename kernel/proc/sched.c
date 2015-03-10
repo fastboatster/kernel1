@@ -114,6 +114,7 @@ void
 sched_sleep_on(ktqueue_t *q)
 {
 	dbg(DBG_PRINT, "INFO : executing sched_sleep_on\n");
+	dbg(DBG_PRINT, "(GRADING1A)\n");
      /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
 	curthr->kt_state = KT_SLEEP;
 	ktqueue_enqueue(q, curthr);
@@ -187,7 +188,7 @@ void sched_broadcast_on(ktqueue_t *q)
 		dbg(DBG_PRINT, "(GRADING1A)\n"); /*first called by pageoutd*/
 	    return;
 	};
-	while(!sched_queue_empty(q)) {
+	while(!sched_queue_empty(q)) { dbg(DBG_PRINT, "(GRADING1C 3)\n");
 		newthr = ktqueue_dequeue(q);
 		newthr->kt_state = KT_RUN;
 		/* remove thread from wait queue*/
@@ -270,6 +271,7 @@ void sched_cancel(struct kthread *kthr)
 void sched_switch(void)
 {
 	dbg(DBG_PRINT, "INFO : executing sched_switch\n");
+	dbg(DBG_PRINT, "(GRADING1A)\n");
      /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
 	/*save old interrupt level and set curr interrupt level to high, blocking interrupts:*/
 	kthread_t *old_thread;
