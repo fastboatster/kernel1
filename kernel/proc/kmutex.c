@@ -72,7 +72,7 @@ kmutex_init(kmutex_t *mtx)
 void
 kmutex_lock(kmutex_t *mtx) {
      /* NOT_YET_IMPLEMENTED("PROCS: kmutex_lock"); */
-	KASSERT(curthr && (curthr != mtx->km_holder)); /*curthe is not already mutex holder*/
+	KASSERT(curthr && (curthr != mtx->km_holder)); /*curthr is not already mutex holder*/
 	dbg(DBG_PRINT, "(GRADING1A 5.a)\n");
 	if(mtx->km_holder) {
 		dbg(DBG_PRINT, "(GRADING1C 7)\n");
