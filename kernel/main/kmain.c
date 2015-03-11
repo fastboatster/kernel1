@@ -374,6 +374,7 @@ initproc_run(int arg1, void *arg2)
     /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
 #ifdef __DRIVERS__
 	dbg(DBG_PRINT, "(GRADING1B)\n");
+
 	kshell_add_command("faber_test", my_faber_thread_test, "Run faber_thread_test()");
 	kshell_add_command("sunghan_test", my_sunghan_test, "Run sunghan_test().");
 	kshell_add_command("sunghan_deadlock", my_sunghan_deadlock_test, "Run sunghan_deadlock_test().");
