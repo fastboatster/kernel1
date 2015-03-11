@@ -445,7 +445,7 @@ do_waitpid(pid_t pid, int options, int *status)
 	}
 
 	int pid_found = 0;
-	int found_dead_child = 0;
+	int found_dead_child = 0; /* to capture dead child PID */
 	proc_t* dead_child;
 
 	proc_t* child;
