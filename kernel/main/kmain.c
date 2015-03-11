@@ -107,7 +107,6 @@ kmain()
 #endif
         vmmap_init();
         proc_init();
-        dbg(DBG_PRINT, "Gotta initialize kthread\n");
         kthread_init();
 
 #ifdef __DRIVERS__
@@ -390,6 +389,6 @@ initproc_run(int arg1, void *arg2)
 	/* waits for all children to die */
 	while(do_waitpid(-1, 0, NULL) != -ECHILD);
 
-    return NULL;	 /*waits for all children to die */
+    return NULL;
 
 }

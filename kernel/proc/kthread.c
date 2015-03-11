@@ -79,19 +79,12 @@ free_stack(char *stack)
 void
 kthread_destroy(kthread_t *t)
 {
-	dbg(DBG_PRINT, "INFO : executing kthread_destroy\n");
-		/*
-		 * Free up all the space used for kthread
-		 */
-        KASSERT(NULL != t);
-        KASSERT(NULL != t->kt_kstack);
-        free_stack(t->kt_kstack);			   /* free up the stack */
-        if (list_link_is_linked(&t->kt_plink)) {
-        	dbg(DBG_PRINT, "(GRADING1A)\n"); /* remove the link on proc thread list */
-            list_remove(&t->kt_plink);
-        }
-        KASSERT(NULL != kthread_allocator);
-        slab_obj_free(kthread_allocator, t);	/* free up the thread space */
+        KASSERT(t && t->kt_kstack);
+        free_stack(t->kt_kstack);
+        if (list_link_is_linked(&t->kt_plink))
+                list_remove(&t->kt_plink);
+
+        slab_obj_free(kthread_allocator, t);
 }
 
 /*

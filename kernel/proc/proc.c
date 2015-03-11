@@ -187,7 +187,7 @@ proc_create(char *name)
  *    - Reparenting any children to the init process
  *    - Setting its status and state appropriately
  *
- * The parent will finish destroying the process within  (make
+ * The parent will finish destroying the process within do_waitpid (make
  * sure you understand why it cannot be done here). Until the parent
  * finishes destroying it, the process is informally called a 'zombie'
  * process.
@@ -288,7 +288,6 @@ proc_kill(proc_t *p, int status)
 	if(curproc == p) {
 		dbg(DBG_PRINT, "(GRADING1C 9)\n");
 		dbg(DBG_PRINT, "INFO : proc_kill is called on the curproc\n");
-		/*do_exit(status);*/
 		kthread_cancel(curthr, (void*)status);
 		return;
 	}
