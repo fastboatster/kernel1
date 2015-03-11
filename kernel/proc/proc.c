@@ -288,7 +288,6 @@ proc_kill(proc_t *p, int status)
 	if(curproc == p) {
 		dbg(DBG_PRINT, "(GRADING1C 9)\n");
 		dbg(DBG_PRINT, "INFO : proc_kill is called on the curproc\n");
-		/*do_exit(status);*/
 		kthread_cancel(curthr, (void*)status);
 		return;
 	}
