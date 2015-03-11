@@ -317,7 +317,7 @@ proc_kill(proc_t *p, int status)
 		}
 		/* this thread need not be removed from the thread list now. it can be handled in the do_waitpid */
 	}list_iterate_end();
-
+/* don't know if this path should be tested*/
 }
 
 /*
@@ -370,7 +370,7 @@ proc_thread_exited(void *retval)
 	 */
 
 	/* NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");*/
-
+	dbg(DBG_PRINT, "(GRADING1C 1)\n");
 	dbg(DBG_PRINT, "INFO : executing proc_thread_exited\n");
 	KASSERT(NULL != curproc);
 	/*if (list_empty(&(curproc->p_threads)))*/

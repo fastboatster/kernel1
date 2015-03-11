@@ -196,10 +196,11 @@ bootstrap(int arg1, void *arg2)
         dbg(DBG_PRINT, "(GRADING1A 1.a)\n");
         dbg(DBG_PRINT, "INFO : Idle thread created \n");
         KASSERT(NULL != &(idle_thr->kt_ctx));
-        context_make_active(&(idle_thr->kt_ctx)); /* to make idle execute right away */
-
         KASSERT(PID_IDLE == curproc->p_pid);
         dbg(DBG_PRINT, "(GRADING1A 1.a)\n");
+        context_make_active(&(idle_thr->kt_ctx)); /* to make idle execute right away */
+
+
 
         /* NOT_YET_IMPLEMENTED("PROCS: bootstrap"); */
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
@@ -363,6 +364,7 @@ static void *
 initproc_run(int arg1, void *arg2)
 {
 	dbg(DBG_PRINT, "INFO : executing initproc_run\n");
+	dbg(DBG_PRINT, "(GRADING1A)\n");
     /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
 #ifdef __DRIVERS__
 	kshell_add_command("faber_test", my_faber_thread_test, "Run faber_thread_test()");
