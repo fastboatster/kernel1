@@ -154,7 +154,8 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 	}
 }
 
-kthread_t* sched_wakeup_on(ktqueue_t *q)
+kthread_t *
+sched_wakeup_on(ktqueue_t *q)
 {
 	dbg(DBG_PRINT, "INFO : executing sched_wakeup_on\n");
     /* NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
@@ -178,7 +179,8 @@ kthread_t* sched_wakeup_on(ktqueue_t *q)
 	return newthr;
 }
 
-void sched_broadcast_on(ktqueue_t *q)
+void
+sched_broadcast_on(ktqueue_t *q)
 {
        /* NOT_YET_IMPLEMENTED("PROCS: sched_broadcast_on"); */
 	dbg(DBG_PRINT, "INFO : executing sched_broadcast_on\n");
@@ -209,7 +211,8 @@ void sched_broadcast_on(ktqueue_t *q)
  * state, it should be on some queue. Otherwise, it will never be run
  * again.
  */
-void sched_cancel(struct kthread *kthr)
+void
+sched_cancel(struct kthread *kthr)
 {
 	dbg(DBG_PRINT, "INFO : executing sched_cancel\n");
      /* NOT_YET_IMPLEMENTED("PROCS: sched_cancel"); */
@@ -268,7 +271,8 @@ void sched_cancel(struct kthread *kthr)
  *
  * Note: The IPL is process specific.
  */
-void sched_switch(void)
+void
+sched_switch(void)
 {
 	dbg(DBG_PRINT, "INFO : executing sched_switch\n");
 	dbg(DBG_PRINT, "(GRADING1A)\n");
