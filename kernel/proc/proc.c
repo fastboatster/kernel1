@@ -117,6 +117,7 @@ proc_create(char *name)
 	 return NULL;
 	 */
 	dbg(DBG_PRINT, "INFO : executing proc_create \n");
+
 	int pid = _proc_getid();
 	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); 	/* pid can only be PID_IDLE if this is the first process */
 	dbg(DBG_PRINT, "(GRADING1A 2.a)\n");
@@ -436,14 +437,15 @@ do_waitpid(pid_t pid, int options, int *status)
 	if (list_empty(&curproc->p_children)) {
 		dbg(DBG_PRINT, "(GRADING1A)\n");
 		dbg(DBG_PRINT, "INFO : no children found, so returns -ECHILD \n");
-		if(status) { dbg(DBG_PRINT, "(GRADING1C 1)\n");
+		if(status) {
+			dbg(DBG_PRINT, "(GRADING1C 1)\n");
 			*status = -1;
 		}
 		return -ECHILD;
 	}
 
 	int pid_found = 0;
-	int found_dead_child = 0;
+	int found_dead_child = 0; /* to capture dead child PID */
 	proc_t* dead_child;
 
 	proc_t* child;
