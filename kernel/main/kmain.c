@@ -107,7 +107,6 @@ kmain()
 #endif
         vmmap_init();
         proc_init();
-        dbg(DBG_PRINT, "Gotta initialize kthread\n");
         kthread_init();
 
 #ifdef __DRIVERS__
