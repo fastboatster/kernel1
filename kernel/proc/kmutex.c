@@ -58,6 +58,7 @@ void
 kmutex_init(kmutex_t *mtx)
 {
      /*  NOT_YET_IMPLEMENTED("PROCS: kmutex_init"); */
+	dbg(DBG_PRINT, "(GRADING1C 7)\n");
 	sched_queue_init(&(mtx->km_waitq)); /* init the wait queue in mutex mtx */
 	mtx->km_holder = NULL; /* set the mutex holder to null */
 }
@@ -71,13 +72,15 @@ kmutex_init(kmutex_t *mtx)
 void
 kmutex_lock(kmutex_t *mtx) {
      /* NOT_YET_IMPLEMENTED("PROCS: kmutex_lock"); */
-	KASSERT(curthr && (curthr != mtx->km_holder)); /*curthe is not already mutex holder*/
+	KASSERT(curthr && (curthr != mtx->km_holder)); /*curthr is not already mutex holder*/
 	dbg(DBG_PRINT, "(GRADING1A 5.a)\n");
 	if(mtx->km_holder) {
+		dbg(DBG_PRINT, "(GRADING1C 7)\n");
 		ktqueue_enqueue(&(mtx->km_waitq), curthr);
 		sched_switch();
 	}
 	else {
+		dbg(DBG_PRINT, "(GRADING1A)\n");
 		mtx->km_holder = curthr;
 	};
 }
@@ -94,11 +97,13 @@ kmutex_lock_cancellable(kmutex_t *mtx)
 	dbg(DBG_PRINT, "(GRADING1A 5.b)\n");
 	int status =0;
 	if(mtx->km_holder) {
+		dbg(DBG_PRINT, "(GRADING1C 7)\n");
 		/*ktqueue_enqueue(&(mtx->km_waitq), curthr);*/
 		status = sched_cancellable_sleep_on(&(mtx->km_waitq));
 		/*sched_switch();*/ /* not needed as sched_cancellable_sleep_on is calling sched_swtich*/
 	}
 	else {
+		dbg(DBG_PRINT, "(GRADING1C 7)\n");
 		mtx->km_holder = curthr;
 	};
         return status;
@@ -124,10 +129,12 @@ kmutex_unlock(kmutex_t *mtx)
        /* NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock"); */
 	 KASSERT(curthr && (curthr == mtx->km_holder)); /*make sure curthr is a mutex holder*/
 	 dbg(DBG_PRINT, "(GRADING1A 5.c)\n");
-	if	(sched_queue_empty(&(mtx->km_waitq)))
-		mtx->km_holder = NULL;
+	if	(sched_queue_empty(&(mtx->km_waitq))){
+		dbg(DBG_PRINT, "(GRADING1A)\n");
+		mtx->km_holder = NULL; }
 	else
 	{
+		dbg(DBG_PRINT, "(GRADING1C 7)\n");
 		/*dequeue a thread from mutex wait queue*/
 		kthread_t *new_thr = ktqueue_dequeue(&(mtx->km_waitq));
 		mtx->km_holder = new_thr; /*update a pointer to current mutex holder*/
