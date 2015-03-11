@@ -389,6 +389,6 @@ initproc_run(int arg1, void *arg2)
 	/* waits for all children to die */
 	while(do_waitpid(-1, 0, NULL) != -ECHILD);
 
-    return NULL;	 /*waits for all children to die */
+    return NULL;
 
 }
