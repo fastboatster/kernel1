@@ -177,6 +177,7 @@ bootstrap(int arg1, void *arg2)
 	 * PID = 2; pageoutd
 	 */
 		dbg(DBG_PRINT, "INFO : executing bootstrap\n");
+		dbg(DBG_PRINT, "(GRADING1A)\n");
         /* necessary to finalize page table information */
         pt_template_init();
 
@@ -300,6 +301,8 @@ initproc_create(void)
 	 * return NULL;
 	 */
 			dbg(DBG_PRINT, "INFO : executing initproc_create \n");
+			dbg(DBG_PRINT, "(GRADING1A)\n");
+
 	        proc_t *init_proc=proc_create("Init");
 	        KASSERT(NULL != init_proc);		/*Asserting that init_proc is not null*/
 	        dbg(DBG_PRINT, "(GRADING1A 1.b)\n");
@@ -327,6 +330,7 @@ initproc_create(void)
 extern void *faber_thread_test(int, void*);
 static int my_faber_thread_test(kshell_t* kshell, int argc, char** argv) {
 	dbg(DBG_PRINT, "INFO : executing faber_thread_test\n");
+	dbg(DBG_PRINT, "(GRADING1C)\n");
 	proc_t* new_faber_proc = proc_create("faber_test");
 	KASSERT(NULL != new_faber_proc);
 	kthread_t *new_faber_thr = kthread_create(new_faber_proc, faber_thread_test, 1, NULL);
@@ -339,6 +343,7 @@ static int my_faber_thread_test(kshell_t* kshell, int argc, char** argv) {
 extern void *sunghan_test(int, void*);
 static int my_sunghan_test(kshell_t* kshell, int argc, char** argv){
 	dbg(DBG_PRINT, "INFO: executing sunghan test\n");
+	dbg(DBG_PRINT, "(GRADING1D 1)\n");
 	proc_t *new_sunghan_test = proc_create("sunghan_test");
 	KASSERT(NULL != new_sunghan_test);
 	kthread_t *new_sunghan_thr = kthread_create(new_sunghan_test, sunghan_test, 1, NULL);
@@ -351,6 +356,7 @@ static int my_sunghan_test(kshell_t* kshell, int argc, char** argv){
 extern void *sunghan_deadlock_test(int, void*);
 static int my_sunghan_deadlock_test(kshell_t* kshell, int argc, char** argv){
 	dbg(DBG_PRINT, "INFO : executing sunghan deadlock test\n");
+	dbg(DBG_PRINT, "(GRADING1D 2)\n");
 	proc_t *new_sunghan_deadlock_test = proc_create("sunghan_deadlock_test");
 	KASSERT(NULL != new_sunghan_deadlock_test);
 	kthread_t *new_sunghan_deadlock_thr = kthread_create(new_sunghan_deadlock_test, sunghan_deadlock_test, 1, NULL);
@@ -367,6 +373,7 @@ initproc_run(int arg1, void *arg2)
 	dbg(DBG_PRINT, "(GRADING1A)\n");
     /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
 #ifdef __DRIVERS__
+	dbg(DBG_PRINT, "(GRADING1B)\n");
 	kshell_add_command("faber_test", my_faber_thread_test, "Run faber_thread_test()");
 	kshell_add_command("sunghan_test", my_sunghan_test, "Run sunghan_test().");
 	kshell_add_command("sunghan_deadlock", my_sunghan_deadlock_test, "Run sunghan_deadlock_test().");

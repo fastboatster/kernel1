@@ -149,7 +149,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 		return -EINTR;
 	}
 	else {
-		dbg(DBG_PRINT, "(GRADING1A)\n"); /*after creating kshell, it waits for the interrupt and goes to cancellable sleep on */
+		dbg(DBG_PRINT, "(GRADING1B)\n"); /*after creating kshell, it waits for the interrupt and goes to cancellable sleep on */
 		return 0;
 	}
 }
