@@ -11,25 +11,25 @@ Comments: No comments
 | SKIP (Optional) |
 +-----------------+
 
-Every test runs properly in the standard test suite.
+Every test in the standard test-suite runs properly.
 
 +---------+
 | GRADING |
 +---------+
 
 (A.1) In main/kmain.c:
-    (a) In bootstrap(): 3 of 3 pts
-    (b) In initproc_create():  3 of 3 pts
+    (a) In bootstrap(): 3 out of 3 pts
+    (b) In initproc_create():  3 out of 3 pts
 
 (A.2) In proc/proc.c:
-    (a) In proc_create():  4 of 4 pts
-    (b) In proc_cleanup():  5 of 5 pts
-    (c) In do_waitpid():  8 of 8 pts
+    (a) In proc_create():  4 out of 4 pts
+    (b) In proc_cleanup():  5 out of 5 pts
+    (c) In do_waitpid():  8 out of 8 pts
 
 (A.3) In proc/kthread.c:
     (a) In kthread_create(): 2 out of 2 pts
     (b) In kthread_cancel(): 1 out of 1 pt
-    (c) In kthread_exit():  3 of 3 pts
+    (c) In kthread_exit():  3 out of 3 pts
 
 (A.4) In proc/sched.c:
     (a) In sched_wakeup_on(): 1 out of 1 pt
